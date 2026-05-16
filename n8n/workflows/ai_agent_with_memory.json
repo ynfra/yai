@@ -1,0 +1,193 @@
+{
+  "name": "[Demo] AI \u2014 Agent with Memory",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "am-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b944495d-eaa8-4adb-a305-2438f108b321",
+              "name": "message",
+              "type": "string",
+              "value": "My yai stack has 7 services. Each service uses 256 MB of RAM. How many GB is that in total? Also, what is 2^10? Then tell me the current UTC time and summarise what you calculated."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "am-02",
+      "name": "Set Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "You are a helpful infrastructure assistant. Use the calculator tool for any math. Use the get_time tool to fetch the current UTC time. Keep responses concise and factual."
+        }
+      },
+      "id": "am-03",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        568,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "am-04",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "default",
+        "contextWindowLength": 10
+      },
+      "id": "am-05",
+      "name": "Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        576,
+        224
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "am-06",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        704,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Returns the current UTC date and time as an ISO 8601 string.",
+        "jsCode": "return new Date().toISOString();"
+      },
+      "id": "am-07",
+      "name": "Get Time",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        224
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LiteLLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Time": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

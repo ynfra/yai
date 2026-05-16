@@ -1,0 +1,121 @@
+{
+  "name": "[Demo] Browserless \u2014 Screenshot",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bl1-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://grafana.com",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "fullPage",
+              "value": "false",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bl1-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:26003/screenshot",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "bl1-03",
+      "name": "Take Screenshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst bin = item.binary?.data;\nreturn [{json: {\n  message: 'Screenshot captured as binary data (PNG)',\n  url: $('Config').item.json.url,\n  mime_type: bin?.mimeType || 'image/png',\n  file_name: bin?.fileName || 'screenshot.png',\n  size_bytes: bin?.fileSize || 'unknown',\n  tip: 'Connect a Write Binary File node or Send Email node to save/send the PNG.'\n}}];"
+      },
+      "id": "bl1-04",
+      "name": "Output Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Take Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take Screenshot": {
+      "main": [
+        [
+          {
+            "node": "Output Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

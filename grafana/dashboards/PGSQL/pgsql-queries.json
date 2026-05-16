@@ -1,0 +1,902 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "grafana" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": { "limit": 100, "matchAny": false, "tags": [], "type": "dashboard" },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "PGSQL Queries Overview — top queries by call rate / latency, click through to PGSQL Query for detail. Top 30 tables are cumulative since pg_stat_statements stats_reset (no time bounds) and honour the User / Query Type filters; Trends panels honour the time picker only (pg_query_* metrics don't expose user / type labels).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    { "asDropdown": true, "icon": "external link", "includeVars": true, "keepTime": true, "tags": ["FX","PGSQL","Overview"], "targetBlank": false, "title": "Overview", "tooltip": "", "type": "dashboards", "url": "" },
+    { "asDropdown": true, "icon": "external link", "includeVars": true, "keepTime": true, "tags": ["FX","PGSQL","Cluster"], "targetBlank": false, "title": "Cluster", "tooltip": "", "type": "dashboards", "url": "" },
+    { "asDropdown": true, "icon": "external link", "includeVars": true, "keepTime": true, "tags": ["FX","PGSQL","Instance"], "targetBlank": false, "title": "Instance", "tooltip": "", "type": "dashboards", "url": "" },
+    { "asDropdown": true, "icon": "external link", "includeVars": true, "keepTime": true, "tags": ["FX","PGSQL","Database"], "targetBlank": false, "title": "Database", "tooltip": "", "type": "dashboards", "url": "" }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Overview — ${instance} / ${datname}",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Total queries-per-second across all tracked queries.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "qps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true,
+        "text": { "valueSize": 30 }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "sum(rate(pg_query_calls{instance=\"$instance\", datname=\"$datname\"}[1m]))",
+          "legendFormat": "QPS",
+          "refId": "A"
+        }
+      ],
+      "title": "Total QPS",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Mean response time across all tracked queries (last 1m).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.05 }, { "color": "red", "value": 0.5 } ] },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true,
+        "text": { "valueSize": 30 }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "sum(rate(pg_query_exec_time{instance=\"$instance\", datname=\"$datname\"}[1m])) / sum(rate(pg_query_calls{instance=\"$instance\", datname=\"$datname\"}[1m]))",
+          "legendFormat": "Mean RT",
+          "refId": "A"
+        }
+      ],
+      "title": "Mean RT",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Number of distinct queries currently tracked by pg_stat_statements.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true,
+        "text": { "valueSize": 30 }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "count(pg_query_calls{instance=\"$instance\", datname=\"$datname\"})",
+          "legendFormat": "Tracked",
+          "refId": "A"
+        }
+      ],
+      "title": "Tracked Queries",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Total rows returned/affected per second across all queries.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "rps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true,
+        "text": { "valueSize": 30 }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "sum(rate(pg_query_rows{instance=\"$instance\", datname=\"$datname\"}[1m]))",
+          "legendFormat": "Rows/s",
+          "refId": "A"
+        }
+      ],
+      "title": "Rows/s",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "id": 10,
+      "title": "Top Queries — cumulative since stats_reset (not bound by time picker)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+      "description": "Top 30 queries by call count (live from pg_stat_statements, grouped by queryid + user). Cumulative since stats_reset — not bound by time picker. Click any Query ID to open the detail dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": { "type": "auto", "wrapText": false },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "queryid" },
+            "properties": [
+              { "id": "displayName", "value": "Query ID" },
+              { "id": "custom.width", "value": 220 },
+              { "id": "links", "value": [ { "title": "PGSQL Query : ${__data.fields.queryid}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__data.fields.queryid}&${__url_time_range}" } ] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rolname" },
+            "properties": [
+              { "id": "displayName", "value": "User" },
+              { "id": "custom.width", "value": 140 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "qtype" },
+            "properties": [
+              { "id": "displayName", "value": "Type" },
+              { "id": "custom.width", "value": 90 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "calls" },
+            "properties": [
+              { "id": "displayName", "value": "Calls" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "qps" },
+            "properties": [
+              { "id": "displayName", "value": "QPS (avg)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "qps" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "mean_ms" },
+            "properties": [
+              { "id": "displayName", "value": "Mean (ms)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "ms" },
+              { "id": "decimals", "value": 2 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 500 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "total_s" },
+            "properties": [
+              { "id": "displayName", "value": "Total Time (s)" },
+              { "id": "custom.width", "value": 130 },
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rows" },
+            "properties": [
+              { "id": "displayName", "value": "Rows" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "query" },
+            "properties": [
+              { "id": "displayName", "value": "SQL" },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 25 },
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [ { "desc": true, "displayName": "Calls" } ]
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH s AS (SELECT ps.*, CASE WHEN ps.query ~* '^\\s*\\(*\\s*SELECT' THEN 'SELECT' WHEN ps.query ~* '^\\s*INSERT' THEN 'INSERT' WHEN ps.query ~* '^\\s*UPDATE' THEN 'UPDATE' WHEN ps.query ~* '^\\s*DELETE' THEN 'DELETE' WHEN ps.query ~* '^\\s*WITH' THEN 'WITH' WHEN ps.query ~* '^\\s*COPY' THEN 'COPY' WHEN ps.query ~* '^\\s*(CREATE|ALTER|DROP|TRUNCATE)' THEN 'DDL' WHEN ps.query ~* '^\\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)' THEN 'TX' WHEN ps.query ~* '^\\s*(VACUUM|ANALYZE|CLUSTER|REINDEX)' THEN 'MAINT' WHEN ps.query ~* '^\\s*(SET|SHOW|RESET)' THEN 'SESSION' WHEN ps.query ~* '^\\s*CALL' THEN 'CALL' ELSE 'OTHER' END AS qtype FROM pg_stat_statements ps) SELECT s.queryid::text AS queryid, COALESCE(r.rolname, s.userid::text) AS rolname, s.qtype, sum(s.calls)::bigint AS calls, (sum(s.calls) / GREATEST(EXTRACT(EPOCH FROM (now() - i.stats_reset)), 1))::float AS qps, (sum(s.total_exec_time) / NULLIF(sum(s.calls),0))::float AS mean_ms, (sum(s.total_exec_time)/1000.0)::float AS total_s, sum(s.rows)::bigint AS rows, regexp_replace(left(s.query, 400), '\\s+', ' ', 'g') AS query FROM s JOIN pg_database d ON s.dbid = d.oid LEFT JOIN pg_roles r ON s.userid = r.oid CROSS JOIN pg_stat_statements_info i WHERE d.datname = '${datname}' AND s.calls > 4 AND COALESCE(r.rolname, s.userid::text) = ANY(ARRAY[${user:sqlstring}]::text[]) AND s.qtype = ANY(ARRAY[${qtype:sqlstring}]::text[]) GROUP BY s.queryid, s.query, r.rolname, s.userid, s.qtype, i.stats_reset ORDER BY calls DESC LIMIT 30",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ],
+      "title": "Top 30 Queries (by calls)",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+      "description": "Top 30 queries by mean execution time (live from pg_stat_statements, grouped by queryid + user). Mean = total/calls. Stddev shows plan stability (high stddev → unstable plan). I/O% = share of mean spent in shared+temp block read/write (track_io_timing=on). Cumulative since stats_reset — not bound by time picker. Click any Query ID to open the detail dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": { "type": "auto", "wrapText": false },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "queryid" },
+            "properties": [
+              { "id": "displayName", "value": "Query ID" },
+              { "id": "custom.width", "value": 200 },
+              { "id": "links", "value": [ { "title": "PGSQL Query : ${__data.fields.queryid}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__data.fields.queryid}&${__url_time_range}" } ] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rolname" },
+            "properties": [
+              { "id": "displayName", "value": "User" },
+              { "id": "custom.width", "value": 140 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "qtype" },
+            "properties": [
+              { "id": "displayName", "value": "Type" },
+              { "id": "custom.width", "value": 90 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "mean_ms" },
+            "properties": [
+              { "id": "displayName", "value": "Mean (ms)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "ms" },
+              { "id": "decimals", "value": 2 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 500 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "stddev_ms" },
+            "properties": [
+              { "id": "displayName", "value": "Stddev (ms)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "ms" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "max_ms" },
+            "properties": [
+              { "id": "displayName", "value": "Max (ms)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "ms" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "io_pct" },
+            "properties": [
+              { "id": "displayName", "value": "I/O %" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 30 }, { "color": "red", "value": 70 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "calls" },
+            "properties": [
+              { "id": "displayName", "value": "Calls" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "total_s" },
+            "properties": [
+              { "id": "displayName", "value": "Total (s)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rows" },
+            "properties": [
+              { "id": "displayName", "value": "Rows" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "query" },
+            "properties": [
+              { "id": "displayName", "value": "SQL" },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 43 },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [ { "desc": true, "displayName": "Mean (ms)" } ]
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH s AS (SELECT ps.*, CASE WHEN ps.query ~* '^\\s*\\(*\\s*SELECT' THEN 'SELECT' WHEN ps.query ~* '^\\s*INSERT' THEN 'INSERT' WHEN ps.query ~* '^\\s*UPDATE' THEN 'UPDATE' WHEN ps.query ~* '^\\s*DELETE' THEN 'DELETE' WHEN ps.query ~* '^\\s*WITH' THEN 'WITH' WHEN ps.query ~* '^\\s*COPY' THEN 'COPY' WHEN ps.query ~* '^\\s*(CREATE|ALTER|DROP|TRUNCATE)' THEN 'DDL' WHEN ps.query ~* '^\\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)' THEN 'TX' WHEN ps.query ~* '^\\s*(VACUUM|ANALYZE|CLUSTER|REINDEX)' THEN 'MAINT' WHEN ps.query ~* '^\\s*(SET|SHOW|RESET)' THEN 'SESSION' WHEN ps.query ~* '^\\s*CALL' THEN 'CALL' ELSE 'OTHER' END AS qtype FROM pg_stat_statements ps) SELECT s.queryid::text AS queryid, COALESCE(r.rolname, s.userid::text) AS rolname, s.qtype, (sum(s.total_exec_time) / NULLIF(sum(s.calls),0))::float AS mean_ms, max(s.stddev_exec_time)::float AS stddev_ms, max(s.max_exec_time)::float AS max_ms, CASE WHEN sum(s.total_exec_time) > 0 THEN (100.0 * sum(s.shared_blk_read_time + s.shared_blk_write_time + s.temp_blk_read_time + s.temp_blk_write_time) / sum(s.total_exec_time))::float ELSE 0 END AS io_pct, sum(s.calls)::bigint AS calls, (sum(s.total_exec_time)/1000.0)::float AS total_s, sum(s.rows)::bigint AS rows, regexp_replace(left(s.query, 400), '\\s+', ' ', 'g') AS query FROM s JOIN pg_database d ON s.dbid = d.oid LEFT JOIN pg_roles r ON s.userid = r.oid WHERE d.datname = '${datname}' AND s.calls > 4 AND COALESCE(r.rolname, s.userid::text) = ANY(ARRAY[${user:sqlstring}]::text[]) AND s.qtype = ANY(ARRAY[${qtype:sqlstring}]::text[]) GROUP BY s.queryid, s.query, r.rolname, s.userid, s.qtype ORDER BY mean_ms DESC LIMIT 30",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ],
+      "title": "Top 30 Queries (by mean time)",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+      "description": "Top 30 queries by total accumulated execution time since stats_reset (live from pg_stat_statements, grouped by queryid + user). I/O = shared+temp block read/write time (track_io_timing=on). WAL = bytes written to the WAL (write amplification). Temp = temp_blks_written (work_mem spills). Share % = this query's share of all DB exec time. Cumulative since stats_reset — not bound by time picker. Click any Query ID to open the detail dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "cellOptions": { "type": "auto", "wrapText": false },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "queryid" },
+            "properties": [
+              { "id": "displayName", "value": "Query ID" },
+              { "id": "custom.width", "value": 200 },
+              { "id": "links", "value": [ { "title": "PGSQL Query : ${__data.fields.queryid}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__data.fields.queryid}&${__url_time_range}" } ] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rolname" },
+            "properties": [
+              { "id": "displayName", "value": "User" },
+              { "id": "custom.width", "value": 140 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "qtype" },
+            "properties": [
+              { "id": "displayName", "value": "Type" },
+              { "id": "custom.width", "value": 90 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "total_s" },
+            "properties": [
+              { "id": "displayName", "value": "Total (s)" },
+              { "id": "custom.width", "value": 110 },
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 60 }, { "color": "red", "value": 600 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "io_s" },
+            "properties": [
+              { "id": "displayName", "value": "I/O (s)" },
+              { "id": "custom.width", "value": 100 },
+              { "id": "unit", "value": "s" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "io_pct" },
+            "properties": [
+              { "id": "displayName", "value": "I/O %" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 30 }, { "color": "red", "value": 70 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "share_pct" },
+            "properties": [
+              { "id": "displayName", "value": "Share %" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "calls" },
+            "properties": [
+              { "id": "displayName", "value": "Calls" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "wal_mb" },
+            "properties": [
+              { "id": "displayName", "value": "WAL (MiB)" },
+              { "id": "custom.width", "value": 100 },
+              { "id": "unit", "value": "mbytes" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "temp_mb" },
+            "properties": [
+              { "id": "displayName", "value": "Temp (MiB)" },
+              { "id": "custom.width", "value": 100 },
+              { "id": "unit", "value": "mbytes" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 100 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rows" },
+            "properties": [
+              { "id": "displayName", "value": "Rows" },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "query" },
+            "properties": [
+              { "id": "displayName", "value": "SQL" },
+              { "id": "custom.cellOptions", "value": { "type": "auto", "wrapText": true } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 61 },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [ { "desc": true, "displayName": "Total (s)" } ]
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH s AS (SELECT ps.*, CASE WHEN ps.query ~* '^\\s*\\(*\\s*SELECT' THEN 'SELECT' WHEN ps.query ~* '^\\s*INSERT' THEN 'INSERT' WHEN ps.query ~* '^\\s*UPDATE' THEN 'UPDATE' WHEN ps.query ~* '^\\s*DELETE' THEN 'DELETE' WHEN ps.query ~* '^\\s*WITH' THEN 'WITH' WHEN ps.query ~* '^\\s*COPY' THEN 'COPY' WHEN ps.query ~* '^\\s*(CREATE|ALTER|DROP|TRUNCATE)' THEN 'DDL' WHEN ps.query ~* '^\\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)' THEN 'TX' WHEN ps.query ~* '^\\s*(VACUUM|ANALYZE|CLUSTER|REINDEX)' THEN 'MAINT' WHEN ps.query ~* '^\\s*(SET|SHOW|RESET)' THEN 'SESSION' WHEN ps.query ~* '^\\s*CALL' THEN 'CALL' ELSE 'OTHER' END AS qtype FROM pg_stat_statements ps), t AS ( SELECT s.queryid, s.query, COALESCE(r.rolname, s.userid::text) AS rolname, s.qtype, sum(s.total_exec_time) AS total_ms, sum(s.shared_blk_read_time + s.shared_blk_write_time + s.temp_blk_read_time + s.temp_blk_write_time) AS io_ms, sum(s.calls) AS calls, sum(s.rows) AS rows, sum(s.wal_bytes) AS wal_bytes, sum(s.temp_blks_written) AS temp_blks_written FROM s JOIN pg_database d ON s.dbid = d.oid LEFT JOIN pg_roles r ON s.userid = r.oid WHERE d.datname = '${datname}' AND s.calls > 4 AND COALESCE(r.rolname, s.userid::text) = ANY(ARRAY[${user:sqlstring}]::text[]) AND s.qtype = ANY(ARRAY[${qtype:sqlstring}]::text[]) GROUP BY s.queryid, s.query, r.rolname, s.userid, s.qtype ), tot AS ( SELECT NULLIF(sum(total_ms), 0) AS total_ms_all FROM t ) SELECT t.queryid::text AS queryid, t.rolname, t.qtype, (t.total_ms / 1000.0)::float AS total_s, (t.io_ms / 1000.0)::float AS io_s, CASE WHEN t.total_ms > 0 THEN (100.0 * t.io_ms / t.total_ms)::float ELSE 0 END AS io_pct, (100.0 * t.total_ms / tot.total_ms_all)::float AS share_pct, t.calls::bigint AS calls, (t.wal_bytes / 1024.0 / 1024.0)::float AS wal_mb, ((t.temp_blks_written * 8192.0) / 1024.0 / 1024.0)::float AS temp_mb, t.rows::bigint AS rows, regexp_replace(left(t.query, 400), '\\s+', ' ', 'g') AS query FROM t CROSS JOIN tot ORDER BY total_s DESC LIMIT 30",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ],
+      "title": "Top 30 Queries (by total time)",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 20,
+      "title": "Trends",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Top 10 queries by call rate over time. Click a series legend to see in PGSQL Query.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "links": [
+            { "title": "PGSQL Query : ${__field.labels.query}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__field.labels.query}&${__url_time_range}" }
+          ],
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "qps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 6 },
+      "id": 21,
+      "options": {
+        "legend": { "calcs": ["mean","max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "topk(10, sum by (query) (rate(pg_query_calls{instance=\"$instance\", datname=\"$datname\"}[1m])))",
+          "legendFormat": "{{ query }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 — QPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Top 10 queries by mean response time over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "links": [
+            { "title": "PGSQL Query : ${__field.labels.query}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__field.labels.query}&${__url_time_range}" }
+          ],
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 6 },
+      "id": 22,
+      "options": {
+        "legend": { "calcs": ["mean","max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "topk(10, rate(pg_query_exec_time{instance=\"$instance\", datname=\"$datname\"}[1m]) / (rate(pg_query_calls{instance=\"$instance\", datname=\"$datname\"}[1m]) > 0))",
+          "legendFormat": "{{ query }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 — Mean RT",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Top 10 queries by rows-per-second.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "links": [
+            { "title": "PGSQL Query : ${__field.labels.query}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__field.labels.query}&${__url_time_range}" }
+          ],
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "rps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 15 },
+      "id": 23,
+      "options": {
+        "legend": { "calcs": ["mean","max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "topk(10, sum by (query) (rate(pg_query_rows{instance=\"$instance\", datname=\"$datname\"}[1m])))",
+          "legendFormat": "{{ query }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 — Rows/s",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Top 10 queries by shared-block reads (cold-cache pressure).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "links": [
+            { "title": "PGSQL Query : ${__field.labels.query}", "url": "/d/pgsql-query?var-instance=${instance}&var-datname=${datname}&var-query=${__field.labels.query}&${__url_time_range}" }
+          ],
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 15 },
+      "id": 24,
+      "options": {
+        "legend": { "calcs": ["mean","max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "topk(10, sum by (query) (rate(pg_query_sblk_read{instance=\"$instance\", datname=\"$datname\"}[1m]) * 8192))",
+          "legendFormat": "{{ query }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 — Block Reads",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": ["FX","PGSQL","Database","Queries"],
+  "templating": {
+    "list": [
+      {
+        "current": { "text": "vmetrics", "value": "vmetrics" },
+        "includeAll": false,
+        "label": "DS (Metrics)",
+        "name": "DS_VMETRICS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_up{}, instance)",
+        "description": "Postgres instance",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Instance",
+        "multi": false,
+        "name": "instance",
+        "options": [],
+        "query": { "query": "label_values(pg_up{}, instance)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_db_age{instance=\"$instance\"}, datname)",
+        "description": "Database name",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Database",
+        "multi": false,
+        "name": "datname",
+        "options": [],
+        "query": { "query": "label_values(pg_db_age{instance=\"$instance\"}, datname)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "timescaledb" },
+        "definition": "SELECT DISTINCT COALESCE(r.rolname, s.userid::text) AS rolname FROM pg_stat_statements s JOIN pg_database d ON s.dbid = d.oid LEFT JOIN pg_roles r ON s.userid = r.oid WHERE d.datname = '${datname}' ORDER BY 1",
+        "description": "Filter the Top 30 tables by Postgres role. Trends panels are unaffected.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "User",
+        "multi": true,
+        "name": "user",
+        "options": [],
+        "query": "SELECT DISTINCT COALESCE(r.rolname, s.userid::text) AS rolname FROM pg_stat_statements s JOIN pg_database d ON s.dbid = d.oid LEFT JOIN pg_roles r ON s.userid = r.oid WHERE d.datname = '${datname}' ORDER BY 1",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "description": "Filter the Top 30 tables by query verb (regex on the first keyword). Trends panels are unaffected.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Query Type",
+        "multi": true,
+        "name": "qtype",
+        "options": [],
+        "query": "SELECT,INSERT,UPDATE,DELETE,WITH,COPY,DDL,TX,MAINT,SESSION,CALL,OTHER",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_up{instance=\"$instance\"}, cluster)",
+        "description": "Cluster",
+        "hide": 2,
+        "includeAll": false,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": { "query": "label_values(pg_up{instance=\"$instance\"}, cluster)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"]
+  },
+  "timezone": "browser",
+  "title": "PGSQL Queries",
+  "uid": "pgsql-queries",
+  "version": 1
+}

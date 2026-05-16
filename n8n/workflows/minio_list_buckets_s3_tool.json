@@ -1,0 +1,52 @@
+{
+  "name": "MinIO \u2014 List Buckets (S3 Tool)",
+  "nodes": [
+    {
+      "id": "mst-01",
+      "name": "When Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "mst-02",
+      "name": "List All Buckets",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "resource": "bucket",
+        "operation": "getAll"
+      },
+      "credentials": {
+        "s3": {
+          "id": "SUc81Mjj3q7fQnPu",
+          "name": "yai-minio-s3"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Called by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "List All Buckets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

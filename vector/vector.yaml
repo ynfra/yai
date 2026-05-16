@@ -1,0 +1,70 @@
+sources:
+  docker_logs:
+    type: docker_logs
+    include_containers:
+      - "yai-"
+
+  internal_metrics:
+    type: internal_metrics
+
+transforms:
+  tag_metrics:
+    type: remap
+    inputs:
+      - internal_metrics
+    source: |
+      .tags.cluster = "yai"
+
+
+  normalize:
+    type: remap
+    inputs:
+      - docker_logs
+    source: |
+      .service_name = replace(string!(.container_name), "yai-", "")
+      .stream = string!(.stream)
+      .level = "other"
+
+      msg = string!(.message)
+
+      # Try JSON level fields (level / severity / lvl)
+      parsed, err = parse_json(msg)
+      if err == null && is_object(parsed) {
+        lvl = parsed.level
+        if lvl == null { lvl = parsed.severity }
+        if lvl == null { lvl = parsed.lvl }
+        if lvl != null {
+          .level = downcase(to_string!(lvl))
+        }
+      }
+
+      # Fall back to word-boundary regex on raw text
+      if .level == "other" {
+        m, err = parse_regex(msg, r'(?i)\b(?P<level>trace|debug|info|notice|warn(?:ing)?|error|fatal|critical)\b')
+        if err == null {
+          .level = downcase(string!(m.level))
+        }
+      }
+
+      # Normalise variant spellings
+      if .level == "warning" { .level = "warn" }
+
+sinks:
+  vlogs:
+    type: loki
+    inputs:
+      - normalize
+    endpoint: "http://yai-vlogs:9428/insert"
+    labels:
+      service_name: "{{ service_name }}"
+      stream: "{{ stream }}"
+      level: "{{ level }}"
+    encoding:
+      codec: text
+    out_of_order_action: accept
+
+  prometheus_exporter:
+    type: prometheus_exporter
+    inputs:
+      - tag_metrics
+    address: "0.0.0.0:9598"

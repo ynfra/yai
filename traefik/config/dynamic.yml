@@ -1,0 +1,140 @@
+http:
+  routers:
+    # Home dashboard — bare localhost or yai.orb.local
+    home:
+      rule: "Host(`localhost`) || Host(`127.0.0.1`) || Host(`yai.localhost`) || Host(`yai.orb.local`)"
+      service: home
+      entryPoints:
+        - web
+
+    # LLM
+    litellm:
+      rule: "Host(`litellm.localhost`) || Host(`litellm.yai.orb.local`)"
+      service: litellm
+      entryPoints:
+        - web
+
+    langfuse:
+      rule: "Host(`langfuse.localhost`) || Host(`langfuse.yai.orb.local`)"
+      service: langfuse
+      entryPoints:
+        - web
+
+    # Workflows (windmill disabled)
+    n8n:
+      rule: "Host(`n8n.localhost`) || Host(`n8n.yai.orb.local`)"
+      service: n8n
+      entryPoints:
+        - web
+
+    # Data
+    qdrant:
+      rule: "Host(`qdrant.localhost`) || Host(`qdrant.yai.orb.local`)"
+      service: qdrant
+      entryPoints:
+        - web
+
+    minio:
+      rule: "Host(`minio.localhost`) || Host(`minio.yai.orb.local`)"
+      service: minio
+      entryPoints:
+        - web
+
+    # Browser
+    browserless:
+      rule: "Host(`browserless.localhost`) || Host(`browserless.yai.orb.local`)"
+      service: browserless
+      entryPoints:
+        - web
+
+    firecrawl:
+      rule: "Host(`firecrawl.localhost`) || Host(`firecrawl.yai.orb.local`)"
+      service: firecrawl
+      entryPoints:
+        - web
+
+    # Observability
+    grafana:
+      rule: "Host(`grafana.localhost`) || Host(`grafana.yai.orb.local`)"
+      service: grafana
+      entryPoints:
+        - web
+
+    vmetrics:
+      rule: "Host(`vmetrics.localhost`) || Host(`vmetrics.yai.orb.local`)"
+      service: vmetrics
+      entryPoints:
+        - web
+
+    vlogs:
+      rule: "Host(`vlogs.localhost`) || Host(`vlogs.yai.orb.local`)"
+      service: vlogs
+      entryPoints:
+        - web
+
+    vtraces:
+      rule: "Host(`vtraces.localhost`) || Host(`vtraces.yai.orb.local`)"
+      service: vtraces
+      entryPoints:
+        - web
+
+  services:
+    home:
+      loadBalancer:
+        servers:
+          - url: "http://dashboard:80"
+
+    litellm:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:24000"
+
+    langfuse:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:23000"
+
+    n8n:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:26002"
+
+    qdrant:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:26000"
+
+    minio:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:25001"
+
+    browserless:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:26003"
+
+    firecrawl:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:21000"
+
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:22000"
+
+    vmetrics:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:28428"
+
+    vlogs:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:29428"
+
+    vtraces:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:21428"

@@ -1,0 +1,291 @@
+{
+  "name": "[Demo] Core \u2014 Webhook & Branching",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "examples/events",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wb-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        32
+      ],
+      "webhookId": "37906177-4857-4de8-b7fa-1418c683e32d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9c23635b-ebc3-40ee-b238-5e3b2d77769b",
+              "leftValue": "={{ $json.body.priority }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "wb-02",
+      "name": "High Priority?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body;\nreturn [{json: {\n  status: 'ok',\n  priority: 'HIGH',\n  alert: `\ud83d\udea8 [HIGH] ${b.type?.toUpperCase() || 'EVENT'}: ${b.message || 'no message'}`,\n  routed_to: 'pagerduty',\n  processed_at: new Date().toISOString()\n}}];"
+      },
+      "id": "wb-03",
+      "name": "High Priority Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c4a64bff-13d4-43b3-91e7-a2aebf122f3f",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "3ff811f1-3b9f-4cee-8ec3-213e0dd085da",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "warning",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "wb-04",
+      "name": "Route by Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body;\nreturn [{json: {\n  status: 'ok', level: 'error',\n  message: `\u274c ERROR: ${b.message || 'unknown error'}`,\n  service: b.service, routed_to: 'error-queue'\n}}];"
+      },
+      "id": "wb-05",
+      "name": "Format Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body;\nreturn [{json: {\n  status: 'ok', level: 'warning',\n  message: `\u26a0\ufe0f WARNING: ${b.message || 'unknown warning'}`,\n  service: b.service, routed_to: 'slack'\n}}];"
+      },
+      "id": "wb-06",
+      "name": "Format Warning",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body;\nreturn [{json: {\n  status: 'ok', level: 'info',\n  message: `\u2139\ufe0f INFO (${b.type || 'unknown'}): ${b.message || ''}`,\n  service: b.service, routed_to: 'logs'\n}}];"
+      },
+      "id": "wb-07",
+      "name": "Format Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "wb-08",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        128
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "High Priority?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Priority?": {
+      "main": [
+        [
+          {
+            "node": "High Priority Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Priority Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Type": {
+      "main": [
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Warning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Warning": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Info": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

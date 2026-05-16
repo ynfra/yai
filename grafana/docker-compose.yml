@@ -1,0 +1,34 @@
+name: yai-grafana
+
+# Grafana UI only. The backing stores live in their own compose projects:
+#   victoriametrics/  victorialogs/  victoriatraces/  vmagent/
+# All five services share the yai-infra Docker network and resolve each other
+# by container name (yai-victoriametrics, yai-victorialogs, etc.).
+
+services:
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-12.4.3}
+    container_name: yai-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-22000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-Admin1234!}
+      GF_PLUGINS_PREINSTALL: "victoriametrics-metrics-datasource,victoriametrics-logs-datasource,marcusolsson-treemap-panel,marcusolsson-static-datasource"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
+      - ./dashboards:/etc/grafana/dashboards
+    networks:
+      - yai-infra
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  yai-infra:
+    external: true

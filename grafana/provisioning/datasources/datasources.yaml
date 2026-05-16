@@ -1,0 +1,23 @@
+apiVersion: 1
+
+datasources:
+  - name: vmetrics
+    type: prometheus
+    uid: vmetrics
+    url: http://yai-vmetrics:8428
+    access: proxy
+    isDefault: true
+    jsonData:
+      timeInterval: "30s"
+
+  - name: vlogs
+    type: victoriametrics-logs-datasource
+    uid: vlogs
+    url: http://yai-vlogs:9428
+    access: proxy
+
+  - name: vtraces
+    type: grafana-jaeger-datasource
+    uid: vtraces
+    url: http://yai-vtraces:10428/select/jaeger/
+    access: proxy

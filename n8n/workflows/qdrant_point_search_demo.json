@@ -1,0 +1,168 @@
+{
+  "name": "[Demo] Qdrant \u2014 Point Search Demo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "nd-0",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Product catalog with 4-dimensional hand-crafted vectors.\n// Each dimension encodes a category affinity: [sports, tech, outdoor, home]\n// In a real pipeline these vectors come from a text embedding model (e.g. LiteLLM).\n// Note: Qdrant point IDs must be unsigned integers or UUIDs.\nconst products = [\n  { id: 1, vector: [0.90, 0.10, 0.30, 0.10], payload: { name: 'Running Shoes',  category: 'Sports',      price: 89.99  } },\n  { id: 2, vector: [0.80, 0.10, 0.40, 0.10], payload: { name: 'Trail Sneakers', category: 'Sports',      price: 110.00 } },\n  { id: 3, vector: [0.10, 0.90, 0.10, 0.20], payload: { name: 'Laptop Stand',   category: 'Electronics', price: 45.00  } },\n  { id: 4, vector: [0.20, 0.80, 0.10, 0.20], payload: { name: 'USB-C Hub',      category: 'Electronics', price: 35.00  } },\n  { id: 5, vector: [0.50, 0.10, 0.90, 0.10], payload: { name: 'Hiking Backpack',category: 'Outdoors',    price: 129.99 } },\n  { id: 6, vector: [0.10, 0.20, 0.10, 0.90], payload: { name: 'Scented Candle', category: 'Home',        price: 24.99  } },\n];\n// Query: 'sporty outdoor item' \u2192 high sports + outdoor affinity\nconst queryVector = [0.85, 0.10, 0.35, 0.10];\nreturn [{ json: { products, queryVector, collection: 'qdrant_demo' } }];\n"
+      },
+      "id": "nd-1",
+      "name": "Sample Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://host.docker.internal:26000/collections/qdrant_demo",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{\"vectors\": {\"size\": 4, \"distance\": \"Cosine\"}}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "nd-2",
+      "name": "Create Collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -448,
+        0
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://host.docker.internal:26000/collections/qdrant_demo/points",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ points: $('Sample Data').item.json.products }) }}",
+        "options": {}
+      },
+      "id": "nd-3",
+      "name": "Upsert Points",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:26000/collections/qdrant_demo/points/search",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ vector: $('Sample Data').item.json.queryVector, limit: 3, with_payload: true }) }}",
+        "options": {}
+      },
+      "id": "nd-4",
+      "name": "Similarity Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const hits = $input.item.json.result || [];\nconst query = $('Sample Data').item.json.queryVector;\nconst formatted = hits.map((h, i) => ({\n  rank: i + 1,\n  score: Math.round(h.score * 1000) / 1000,\n  name: h.payload.name,\n  category: h.payload.category,\n  price: `$${h.payload.price}`,\n}));\nreturn [{ json: {\n  description: 'Top-3 Qdrant similarity results for query vector (sporty outdoor item)',\n  queryVector: query,\n  results: formatted,\n} }];\n"
+      },
+      "id": "nd-5",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Data": {
+      "main": [
+        [
+          {
+            "node": "Create Collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Collection": {
+      "main": [
+        [
+          {
+            "node": "Upsert Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Points": {
+      "main": [
+        [
+          {
+            "node": "Similarity Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Similarity Search": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

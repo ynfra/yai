@@ -1,0 +1,21 @@
+# Persistent runtime state — never commit
+*/data/
+*/data
+**/data/
+
+# Local env overrides (per-service)
+*/.env.local
+**/.env.local
+
+# macOS noise
+.DS_Store
+**/.DS_Store
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Editor / tooling cruft
+.vscode/
+.idea/
+*.swp
+*.swo

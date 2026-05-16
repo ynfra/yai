@@ -1,0 +1,116 @@
+{
+  "name": "[Demo] Firecrawl \u2014 Map Website",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc3-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://doc.nette.org",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "limit",
+              "value": 50,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc3-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/map",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, limit: $json.limit}) }}",
+        "options": {}
+      },
+      "id": "fc3-03",
+      "name": "Map Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst links = resp.links || [];\nreturn [{json: {\n  success: resp.success,\n  total_links: links.length,\n  links_preview: links.slice(0, 20),\n  all_links: links\n}}];"
+      },
+      "id": "fc3-04",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Map Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Website": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "name": "[Demo] AI \u2014 Basic LLM Chain",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "lc-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0be25cb8-2789-437d-8e9c-c424c7daef33",
+              "name": "text",
+              "type": "string",
+              "value": "The n8n platform experienced a 15-minute outage today between 14:00 and 14:15 UTC. Root cause was a Redis connection pool exhaustion after a misconfigured worker was deployed. The issue has been resolved and monitoring alerts are now in place. Users are advised to re-run any failed workflows from that window."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "lc-02",
+      "name": "Set Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "SystemMessage",
+              "message": "You are a text analysis assistant. Analyse the given text and return structured JSON with: sentiment (positive/negative/neutral), confidence (0\u20131), a one-sentence summary, up to 5 keywords, and whether action is required. Always match the JSON schema exactly."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "lc-03",
+      "name": "Analyse Text",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "lc-04",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        584,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\": \"object\", \"properties\": {\"sentiment\": {\"type\": \"string\", \"enum\": [\"positive\", \"negative\", \"neutral\"], \"description\": \"Overall sentiment of the text\"}, \"confidence\": {\"type\": \"number\", \"minimum\": 0, \"maximum\": 1, \"description\": \"Confidence score between 0 and 1\"}, \"summary\": {\"type\": \"string\", \"description\": \"One-sentence summary of the text\"}, \"keywords\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"description\": \"Up to 5 key topics or entities\"}, \"action_required\": {\"type\": \"boolean\", \"description\": \"Whether the text implies an action is needed\"}}, \"required\": [\"sentiment\", \"confidence\", \"summary\", \"keywords\", \"action_required\"]}"
+      },
+      "id": "lc-05",
+      "name": "JSON Schema Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        456,
+        224
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Input": {
+      "main": [
+        [
+          {
+            "node": "Analyse Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LiteLLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyse Text",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Schema Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyse Text",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

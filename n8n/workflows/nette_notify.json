@@ -1,0 +1,231 @@
+{
+  "name": "Nette Notify",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "nn-01",
+      "name": "When Called by Orchestrator",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT guid, title, link, published_at, summary FROM rss_articles WHERE state = 'summarized' ORDER BY created_at ASC LIMIT 50",
+        "options": {}
+      },
+      "id": "nn-03",
+      "name": "PG Fetch Summarized",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -176,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "nn-04",
+      "name": "Loop Notify",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        48,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst date = item.published_at ? new Date(item.published_at) : null;\nconst pad = n => String(n).padStart(2,'0');\nconst dateStr = date ? `${pad(date.getDate())}.${pad(date.getMonth()+1)}.${date.getFullYear()}` : '';\nconst message = [\n  `\\uD83D\\uDCDD *${item.title}*`,\n  item.summary || '',\n  `<${item.link}|Read article>${dateStr ? '  \\u2022  ' + dateStr : ''}`\n].join('\\n');\nreturn [{ json: { guid: item.guid, message } }];"
+      },
+      "id": "nn-05",
+      "name": "Format Slack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE rss_articles SET state = 'notified' WHERE guid = '{{ $('Format Slack').item.json.guid }}'",
+        "options": {}
+      },
+      "id": "nn-07",
+      "name": "PG Update Notified",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        32
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "nn-08",
+      "name": "Wait 5s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        96
+      ],
+      "webhookId": "50734a57-f5bb-436e-b102-af521c4920b4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        192
+      ],
+      "id": "5b06c4a4-978c-4a49-b636-0189b2dda6ca",
+      "name": "When clicking \u2018Execute workflow\u2019"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#ynfra",
+          "mode": "name"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        528,
+        32
+      ],
+      "id": "83b06584-580b-41a0-91f6-84d04211a6e8",
+      "name": "Send a message",
+      "webhookId": "7b190313-0325-4e2f-b052-10db9feeadb9",
+      "credentials": {
+        "slackApi": {
+          "id": "MszaAJ5MUYqhurpo",
+          "name": "yai-slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Called by Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "PG Fetch Summarized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG Fetch Summarized": {
+      "main": [
+        [
+          {
+            "node": "Loop Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Notify": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Slack": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG Update Notified": {
+      "main": [
+        [
+          {
+            "node": "Wait 5s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5s": {
+      "main": [
+        [
+          {
+            "node": "Loop Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "PG Fetch Summarized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "PG Update Notified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

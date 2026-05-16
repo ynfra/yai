@@ -1,0 +1,20 @@
+name: yai-browserless
+
+services:
+  browserless:
+    image: ghcr.io/browserless/chromium:${BROWSERLESS_VERSION:-latest}
+    container_name: yai-browserless
+    restart: unless-stopped
+    ports:
+      - "${BROWSERLESS_PORT:-26003}:3000"
+    environment:
+      CONCURRENT: ${CONCURRENT:-3}
+      TIMEOUT: ${TIMEOUT:-30000}
+      MAX_QUEUE_LENGTH: ${MAX_QUEUE_LENGTH:-10}
+      DEBUG: ${DEBUG:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/pressure?token=${BROWSERLESS_TOKEN} >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s

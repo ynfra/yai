@@ -1,0 +1,1132 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 1000,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 0, "y": 1},
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT count(*) AS \"Hypertables\" FROM timescaledb_information.hypertables;",
+          "refId": "A"
+        }
+      ],
+      "title": "Hypertables",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 4, "y": 1},
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT count(*) AS \"Chunks\" FROM timescaledb_information.chunks;",
+          "refId": "A"
+        }
+      ],
+      "title": "Chunks",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 8, "y": 1},
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT sum(s.total_bytes) AS \"Total Size\" FROM timescaledb_information.hypertables h, LATERAL hypertable_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s;",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Size",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 12, "y": 1},
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT count(*) FILTER (WHERE is_compressed) AS \"Compressed Chunks\" FROM timescaledb_information.chunks;",
+          "refId": "A"
+        }
+      ],
+      "title": "Compressed Chunks",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "string"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 16, "y": 1},
+      "id": 14,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/.*/", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 56}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT extversion AS \"TimescaleDB\" FROM pg_extension WHERE extname='timescaledb';",
+          "refId": "A"
+        }
+      ],
+      "title": "TimescaleDB",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "string"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 20, "y": 1},
+      "id": 15,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/.*/", "values": false},
+        "textMode": "value",
+        "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 56}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+          "format": "table",
+          "rawSql": "SELECT split_part(current_setting('server_version'), ' ', 1) AS \"PostgreSQL\";",
+          "refId": "A"
+        }
+      ],
+      "title": "PostgreSQL",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 6},
+      "id": 20,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT sum(s.table_bytes) AS \"Table Size\" FROM timescaledb_information.hypertables h, LATERAL hypertable_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s;",
+        "refId": "A"
+      }],
+      "title": "Table Size",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 6},
+      "id": 21,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT sum(s.index_bytes) AS \"Index Size\" FROM timescaledb_information.hypertables h, LATERAL hypertable_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s;",
+        "refId": "A"
+      }],
+      "title": "Index Size",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 6},
+      "id": 22,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT sum(s.toast_bytes) AS \"TOAST Size\" FROM timescaledb_information.hypertables h, LATERAL hypertable_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s;",
+        "refId": "A"
+      }],
+      "title": "TOAST Size",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 6},
+      "id": 23,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "WITH cs AS (SELECT (chunks_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)).* FROM timescaledb_information.hypertables h) SELECT (sum(total_bytes) / NULLIF(count(*), 0))::bigint AS \"Avg Chunk Size\" FROM cs;",
+        "refId": "A"
+      }],
+      "title": "Avg Chunk Size",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 11},
+      "id": 1100,
+      "panels": [],
+      "title": "Hypertables",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "table"}, "properties": [{"id": "unit", "value": "bytes"}, {"id": "custom.cellOptions", "value": {"type": "color-text"}}, {"id": "color", "value": {"mode": "continuous-BlPu"}}]},
+          {"matcher": {"id": "byName", "options": "index"}, "properties": [{"id": "unit", "value": "bytes"}, {"id": "custom.cellOptions", "value": {"type": "color-text"}}, {"id": "color", "value": {"mode": "continuous-BlPu"}}]},
+          {"matcher": {"id": "byName", "options": "toast"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byName", "options": "total"}, "properties": [{"id": "unit", "value": "bytes"}, {"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}]},
+          {"matcher": {"id": "byName", "options": "chunks"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "color-background"}}, {"id": "color", "value": {"mode": "continuous-GrYlRd"}}]}
+        ]
+      },
+      "gridPos": {"h": 12, "w": 14, "x": 0, "y": 12},
+      "id": 30,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "total"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT h.hypertable_name AS \"Name\", s.table_bytes AS \"table\", s.index_bytes AS \"index\", s.toast_bytes AS \"toast\", s.total_bytes AS \"total\", (SELECT count(*) FROM timescaledb_information.chunks c WHERE c.hypertable_name = h.hypertable_name) AS \"chunks\", (SELECT count(*) FROM timescaledb_information.chunks c WHERE c.hypertable_name = h.hypertable_name AND c.is_compressed) AS \"compressed\" FROM timescaledb_information.hypertables h, LATERAL hypertable_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s ORDER BY s.total_bytes DESC;",
+        "refId": "A"
+      }],
+      "title": "Space Usage Hypertables",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "continuous-GrYlRd"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 12, "w": 10, "x": 14, "y": 12},
+      "id": 31,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^chunks$/", "values": true},
+        "showUnfilled": true,
+        "valueMode": "color",
+        "sizing": "auto"
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT h.hypertable_name, count(c.*)::int AS chunks FROM timescaledb_information.hypertables h LEFT JOIN timescaledb_information.chunks c ON c.hypertable_name = h.hypertable_name GROUP BY h.hypertable_name ORDER BY chunks DESC;",
+        "refId": "A"
+      }],
+      "title": "Top Hypertables by Chunk Count",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+      "id": 1200,
+      "panels": [],
+      "title": "Chunks Over Time",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0,
+            "drawStyle": "line", "fillOpacity": 10, "gradientMode": "opacity",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 2,
+            "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "auto",
+            "spanNulls": false, "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 25},
+      "id": 40,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "time_series",
+        "rawSql": "SELECT c.range_start AS time, h.hypertable_name AS metric, cs.total_bytes AS value FROM timescaledb_information.hypertables h JOIN LATERAL chunks_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) cs ON true JOIN timescaledb_information.chunks c ON c.chunk_schema = cs.chunk_schema AND c.chunk_name = cs.chunk_name WHERE c.range_start BETWEEN $__timeFrom() AND $__timeTo() ORDER BY 1, 2;",
+        "refId": "A"
+      }],
+      "title": "Chunksize",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0,
+            "drawStyle": "line", "fillOpacity": 50, "gradientMode": "opacity",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1,
+            "pointSize": 5, "scaleDistribution": {"type": "linear"}, "showPoints": "never",
+            "spanNulls": false, "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 25},
+      "id": 41,
+      "options": {
+        "legend": {"calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "time_series",
+        "rawSql": "SELECT c.range_start AS time, h.hypertable_name AS metric, cs.total_bytes AS value FROM timescaledb_information.hypertables h JOIN LATERAL chunks_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) cs ON true JOIN timescaledb_information.chunks c ON c.chunk_schema = cs.chunk_schema AND c.chunk_name = cs.chunk_name WHERE c.range_start BETWEEN $__timeFrom() AND $__timeTo() ORDER BY 1, 2;",
+        "refId": "A"
+      }],
+      "title": "Chunksize Stacked",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 34},
+      "id": 1300,
+      "panels": [],
+      "title": "Background Jobs",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 35},
+      "id": 50,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT count(*) AS \"Total Jobs\" FROM timescaledb_information.jobs;",
+        "refId": "A"
+      }],
+      "title": "Total Jobs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 35},
+      "id": 51,
+      "options": {
+        "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT count(*) AS \"Failing Jobs\" FROM timescaledb_information.job_stats WHERE last_run_status='Failed' OR (last_successful_finish IS NOT NULL AND last_run_started_at > last_successful_finish);",
+        "refId": "A"
+      }],
+      "title": "Currently Failing Jobs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 35},
+      "id": 52,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT sum(total_successes) AS \"Total Successes\" FROM timescaledb_information.job_stats;",
+        "refId": "A"
+      }],
+      "title": "Total Successes",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 35},
+      "id": 53,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT sum(total_failures) AS \"Total Failures\" FROM timescaledb_information.job_stats;",
+        "refId": "A"
+      }],
+      "title": "Total Failures",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "status"},
+           "properties": [
+             {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+             {"id": "mappings", "value": [
+               {"type": "value", "options": {"Success": {"color": "green", "index": 0}, "Failed": {"color": "red", "index": 1}, "[Never run]": {"color": "yellow", "index": 2}}}
+             ]}
+           ]},
+          {"matcher": {"id": "byName", "options": "failures"},
+           "properties": [
+             {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+             {"id": "color", "value": {"mode": "continuous-GrYlRd"}}
+           ]},
+          {"matcher": {"id": "byName", "options": "last_run"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]},
+          {"matcher": {"id": "byName", "options": "next_run"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]}
+        ]
+      },
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 40},
+      "id": 54,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "failures"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT j.job_id, j.application_name AS application, j.proc_schema || '.' || j.proc_name AS procedure, j.schedule_interval::text AS interval, COALESCE(s.last_run_started_at, '1970-01-01'::timestamptz) AS last_run, COALESCE(s.last_run_status, '[Never run]') AS status, COALESCE(s.last_run_duration::text, '-') AS duration, COALESCE(s.next_start, '1970-01-01'::timestamptz) AS next_run, COALESCE(s.total_runs, 0) AS runs, COALESCE(s.total_successes, 0) AS successes, COALESCE(s.total_failures, 0) AS failures FROM timescaledb_information.jobs j LEFT JOIN timescaledb_information.job_stats s ON s.job_id = j.job_id ORDER BY failures DESC, last_run DESC;",
+        "refId": "A"
+      }],
+      "title": "Jobs Detail",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 52},
+      "id": 1400,
+      "panels": [],
+      "title": "Continuous Aggregates & Compression",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 0, "y": 53},
+      "id": 60,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT count(*) AS \"CAggs\" FROM timescaledb_information.continuous_aggregates;",
+        "refId": "A"
+      }],
+      "title": "Continuous Aggregates",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "yellow", "value": null}, {"color": "green", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 4, "y": 53},
+      "id": 61,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT count(*) FILTER (WHERE compression_enabled) AS \"Compressed CAggs\" FROM timescaledb_information.continuous_aggregates;",
+        "refId": "A"
+      }],
+      "title": "CAggs w/ Compression",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 50}, {"color": "green", "value": 70}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 8, "y": 53},
+      "id": 62,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "showThresholdLabels": false, "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "WITH s AS (SELECT sum(s.before_compression_total_bytes) AS before_b, sum(s.after_compression_total_bytes) AS after_b FROM timescaledb_information.hypertables h, LATERAL hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s) SELECT CASE WHEN before_b > 0 THEN round(((before_b - after_b)::numeric / before_b) * 100, 1) ELSE 0 END AS \"Compression Ratio\" FROM s;",
+        "refId": "A"
+      }],
+      "title": "Compression Savings",
+      "type": "gauge"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 12, "y": 53},
+      "id": 63,
+      "options": {
+        "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value", "wideLayout": true,
+        "text": {"titleSize": 22, "valueSize": 64}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT GREATEST(COALESCE(sum(s.before_compression_total_bytes - s.after_compression_total_bytes), 0), 0) AS \"Saved\" FROM timescaledb_information.hypertables h, LATERAL hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s;",
+        "refId": "A"
+      }],
+      "title": "Bytes Saved by Compression",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Last Refresh"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]},
+          {"matcher": {"id": "byName", "options": "Lag (s)"}, "properties": [{"id": "unit", "value": "s"}, {"id": "custom.cellOptions", "value": {"type": "color-background"}}, {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3600}, {"color": "red", "value": 86400}]}}]}
+        ]
+      },
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 53},
+      "id": 64,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT ca.view_name AS \"View\", COALESCE((SELECT max(s.last_successful_finish) FROM timescaledb_information.job_stats s JOIN timescaledb_information.jobs j ON j.job_id = s.job_id WHERE j.proc_name = 'policy_refresh_continuous_aggregate' AND j.hypertable_name = ca.view_name), '1970-01-01'::timestamptz) AS \"Last Refresh\", COALESCE(EXTRACT(EPOCH FROM (now() - (SELECT max(s.last_successful_finish) FROM timescaledb_information.job_stats s JOIN timescaledb_information.jobs j ON j.job_id = s.job_id WHERE j.proc_name = 'policy_refresh_continuous_aggregate' AND j.hypertable_name = ca.view_name)))::int, 0) AS \"Lag (s)\" FROM timescaledb_information.continuous_aggregates ca ORDER BY ca.view_name;",
+        "refId": "A"
+      }],
+      "title": "CAgg Refresh Lag",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "before"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byName", "options": "after"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byName", "options": "saved"}, "properties": [{"id": "unit", "value": "bytes"}, {"id": "custom.cellOptions", "value": {"type": "color-background"}}, {"id": "color", "value": {"mode": "continuous-GrYlRd"}}]},
+          {"matcher": {"id": "byName", "options": "ratio"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}, {"id": "max", "value": 100}, {"id": "min", "value": 0}]}
+        ]
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 58},
+      "id": 65,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "before"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT h.hypertable_name AS hypertable, COALESCE(s.total_chunks, 0) AS chunks, COALESCE(s.number_compressed_chunks, 0) AS compressed_chunks, COALESCE(s.before_compression_total_bytes, 0) AS before, COALESCE(s.after_compression_total_bytes, 0) AS after, GREATEST(COALESCE(s.before_compression_total_bytes - s.after_compression_total_bytes, 0), 0) AS saved, CASE WHEN COALESCE(s.before_compression_total_bytes, 0) > 0 THEN round(((s.before_compression_total_bytes - s.after_compression_total_bytes)::numeric / s.before_compression_total_bytes) * 100, 1) ELSE 0 END AS ratio FROM timescaledb_information.hypertables h LEFT JOIN LATERAL hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass) s ON true ORDER BY before DESC;",
+        "refId": "A"
+      }],
+      "title": "Per-Hypertable Compression",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 68},
+      "id": 1500,
+      "panels": [],
+      "title": "Activity & Maintenance",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "short"
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "inserts"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}, {"id": "color", "value": {"mode": "continuous-BlPu"}}]},
+          {"matcher": {"id": "byName", "options": "updates"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}, {"id": "color", "value": {"mode": "continuous-YlBl"}}]},
+          {"matcher": {"id": "byName", "options": "deletes"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}, {"id": "color", "value": {"mode": "continuous-RdYlGr"}}]}
+        ]
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 69},
+      "id": 70,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "inserts"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "SELECT h.hypertable_name AS hypertable, COALESCE(s.inserts, 0)::bigint AS inserts, COALESCE(s.updates, 0)::bigint AS updates, COALESCE(s.deletes, 0)::bigint AS deletes FROM timescaledb_information.hypertables h LEFT JOIN (SELECT c.hypertable_name, sum(t.n_tup_ins) AS inserts, sum(t.n_tup_upd) AS updates, sum(t.n_tup_del) AS deletes FROM pg_stat_user_tables t JOIN timescaledb_information.chunks c ON c.chunk_schema = t.schemaname AND c.chunk_name = t.relname GROUP BY c.hypertable_name) s ON s.hypertable_name = h.hypertable_name ORDER BY inserts DESC NULLS LAST;",
+        "refId": "A"
+      }],
+      "title": "Row Modifications per Hypertable",
+      "type": "table",
+      "description": "Cumulative inserts/updates/deletes since last pg_stat_user_tables reset, summed across all chunks of each hypertable."
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "live"}, "properties": [{"id": "unit", "value": "short"}]},
+          {"matcher": {"id": "byName", "options": "dead"}, "properties": [{"id": "unit", "value": "short"}, {"id": "custom.cellOptions", "value": {"type": "color-background"}}, {"id": "color", "value": {"mode": "continuous-GrYlRd"}}]},
+          {"matcher": {"id": "byName", "options": "dead_pct"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}, {"id": "max", "value": 100}, {"id": "min", "value": 0}]},
+          {"matcher": {"id": "byName", "options": "last_vacuum"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]},
+          {"matcher": {"id": "byName", "options": "last_analyze"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]}
+        ]
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 69},
+      "id": 71,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "dead_pct"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "WITH per_chunk AS (SELECT c.hypertable_name, sum(t.n_live_tup) AS live, sum(t.n_dead_tup) AS dead, max(GREATEST(t.last_vacuum, t.last_autovacuum)) AS last_vacuum, max(GREATEST(t.last_analyze, t.last_autoanalyze)) AS last_analyze FROM pg_stat_user_tables t JOIN timescaledb_information.chunks c ON c.chunk_schema = t.schemaname AND c.chunk_name = t.relname GROUP BY c.hypertable_name) SELECT hypertable_name AS hypertable, live, dead, CASE WHEN (live + dead) > 0 THEN round((dead::numeric / (live + dead)) * 100, 1) ELSE 0 END AS dead_pct, last_vacuum, last_analyze FROM per_chunk ORDER BY dead_pct DESC NULLS LAST;",
+        "refId": "A"
+      }],
+      "title": "Vacuum / Bloat per Hypertable",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "size"}, "properties": [{"id": "unit", "value": "bytes"}, {"id": "custom.cellOptions", "value": {"type": "gauge", "mode": "gradient"}}]},
+          {"matcher": {"id": "byName", "options": "range_start"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]},
+          {"matcher": {"id": "byName", "options": "range_end"}, "properties": [{"id": "unit", "value": "dateTimeFromNow"}]},
+          {"matcher": {"id": "byName", "options": "compressed"}, "properties": [{"id": "custom.cellOptions", "value": {"type": "color-background"}}, {"id": "mappings", "value": [
+            {"type": "value", "options": {"true": {"color": "green", "index": 0, "text": "yes"}, "false": {"color": "dark-red", "index": 1, "text": "no"}}}
+          ]}]}
+        ]
+      },
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 78},
+      "id": 80,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "size"}]
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [{
+        "datasource": {"type": "grafana-postgresql-datasource", "uid": "timescaledb"},
+        "format": "table",
+        "rawSql": "WITH cs AS (SELECT h.hypertable_name AS ht, (chunks_detailed_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)).* FROM timescaledb_information.hypertables h) SELECT cs.ht AS hypertable, cs.chunk_name AS chunk, c.range_start, c.range_end, cs.total_bytes AS size, c.is_compressed::text AS compressed FROM cs JOIN timescaledb_information.chunks c ON c.chunk_schema = cs.chunk_schema AND c.chunk_name = cs.chunk_name ORDER BY cs.total_bytes DESC LIMIT 25;",
+        "refId": "A"
+      }],
+      "title": "Top 25 Largest Chunks",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "rps"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 90},
+      "id": 90,
+      "options": {
+        "legend": {"calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+          "expr": "sum by (hypertable) (rate(pg_hypertable_n_tup_ins{datname=\"bigdpi\"}[$__rate_interval]))",
+          "legendFormat": "{{hypertable}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Insert Rate per Hypertable",
+      "type": "timeseries",
+      "description": "Stacked rate of inserts per hypertable, summed across chunks. Source: pg_hypertable_n_tup_ins (custom collector in pg_exporter, see modules/timescaledb/files/pg_exporter/0701-pg_hypertable.yml)."
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "rps"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 100},
+      "id": 91,
+      "options": {
+        "legend": {"calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+          "expr": "sum by (hypertable) (rate(pg_hypertable_n_tup_upd{datname=\"bigdpi\"}[$__rate_interval]))",
+          "legendFormat": "{{hypertable}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Update Rate per Hypertable",
+      "type": "timeseries",
+      "description": "Stacked rate of updates per hypertable, summed across chunks."
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]},
+          "unit": "rps"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 100},
+      "id": 92,
+      "options": {
+        "legend": {"calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_VMETRICS}"},
+          "expr": "sum by (hypertable) (rate(pg_hypertable_n_tup_del{datname=\"bigdpi\"}[$__rate_interval]))",
+          "legendFormat": "{{hypertable}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Delete Rate per Hypertable",
+      "type": "timeseries",
+      "description": "Stacked rate of deletes per hypertable, summed across chunks."
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["timescaledb", "pgsql", "hypertables"],
+  "templating": {
+    "list": [
+      {
+        "current": {"text": "vmetrics", "value": "vmetrics"},
+        "includeAll": false,
+        "label": "DS (Metrics)",
+        "name": "DS_VMETRICS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource",
+        "hide": 0
+      }
+    ]
+  },
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "TSDB Hypertables",
+  "uid": "timescaledb-hypertables",
+  "version": 4,
+  "weekStart": ""
+}

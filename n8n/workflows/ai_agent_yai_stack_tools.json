@@ -1,0 +1,276 @@
+{
+  "name": "[Demo] AI Agent \u2014 yai Stack Tools",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ag-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "query",
+              "value": "Check the yai stack: list MinIO buckets, query VictoriaMetrics for the 'up' metric, fetch the last 3 log lines from VictoriaLogs, and list traced services from VictoriaTraces. Summarise what you find.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ag-02",
+      "name": "Set Query",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "You are a helpful infrastructure assistant for the yai self-hosted AI stack. You have tools to query metrics (VictoriaMetrics/PromQL), logs (VictoriaLogs/LogsQL), traces (VictoriaTraces/Jaeger), and object storage (MinIO/S3). Always use the available tools to answer questions about the stack. Be concise and factual."
+        }
+      },
+      "id": "ag-03",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        696,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "ag-04",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:28428/api/v1/query?query={query}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "query",
+              "description": "PromQL expression to evaluate, e.g. 'up'"
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "id": "ag-05",
+      "name": "VictoriaMetrics Query",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:29428/select/logsql/query?query={query}&limit=20",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "query",
+              "description": "LogsQL query, e.g. 'service_name:\"litellm\" error' or '*'"
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "id": "ag-06",
+      "name": "VictoriaLogs Query",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:21428/select/jaeger/api/services"
+      },
+      "id": "ag-07",
+      "name": "VictoriaTraces Services",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "description": "List all MinIO S3 buckets in the yai stack. Use this to see what object storage buckets exist and their names.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WyTZQix3s5eWeUxr",
+          "mode": "id"
+        }
+      },
+      "id": "ag-08",
+      "name": "MinIO List Buckets",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/scrape",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"url\": \"{url}\", \"formats\": [\"markdown\"]}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "url",
+              "description": "Full URL to scrape, e.g. https://example.com"
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "id": "ag-09",
+      "name": "Firecrawl Scrape",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        224
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Query": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LiteLLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VictoriaMetrics Query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VictoriaLogs Query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VictoriaTraces Services": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MinIO List Buckets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Scrape": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

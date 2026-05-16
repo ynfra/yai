@@ -1,0 +1,201 @@
+{
+  "name": "[Demo] AI \u2014 RAG Query (Qdrant Q&A)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rag/query",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "rq-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ca4f3905-4ae1-4f63-9efd-70fb73164cf9"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "rq-02",
+      "name": "Q&A Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.7,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "rq-03",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "rq-04",
+      "name": "Qdrant Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        352,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "rag_examples",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "rq-05",
+      "name": "Qdrant",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        432
+      ],
+      "credentials": {
+        "qdrantApi": {
+          "id": "ECJrqkGyQpwbY0c5",
+          "name": "yai-qdrant"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "rq-06",
+      "name": "Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({answer: $json.response || $json.text || $json.output}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "rq-07",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Q&A Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Q&A Chain": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LiteLLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Q&A Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Q&A Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Qdrant Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

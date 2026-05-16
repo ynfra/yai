@@ -1,0 +1,116 @@
+{
+  "name": "[Demo] Firecrawl \u2014 Search",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc4-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "query",
+              "value": "nette PHP framework",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "limit",
+              "value": 5,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc4-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/search",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({query: $json.query, limit: $json.limit}) }}",
+        "options": {}
+      },
+      "id": "fc4-03",
+      "name": "Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst results = resp.data || [];\nreturn [{json: {\n  success: resp.success,\n  job_id: resp.id,\n  total_results: results.length,\n  results: results.map(r => ({url: r.url, title: r.title, description: r.description}))\n}}];"
+      },
+      "id": "fc4-04",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

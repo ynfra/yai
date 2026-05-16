@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "defaultMode": "auto",
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
