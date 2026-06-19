@@ -62,6 +62,11 @@ Commands: init | start | stop | restart | logs | ps | status | orbstack:install
 
 > Traefik routes `*.yai.orb.local` to every service and serves a navigation dashboard at **<http://yai.orb.local>** with one-click links to every service.
 
+## Talks & media
+
+- 📺 Video: <https://www.youtube.com/watch?v=Dm7tMzakhuo>
+- 🎤 Presentation (2026-05-21): <https://slides.com/f3l1x/2026-05-21-ai-stack/>
+
 ## Development
 
 > Use OrbStack to run the stack (very recommended for local development on macOS).
