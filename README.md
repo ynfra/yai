@@ -1,6 +1,8 @@
 # Ynfra | yAI
 
-[![Watch the video](https://img.youtube.com/vi/Dm7tMzakhuo/maxresdefault.jpg)](https://www.youtube.com/watch?v=Dm7tMzakhuo)
+[![Watch the video](docs/youtube.png)](https://www.youtube.com/watch?v=Dm7tMzakhuo)
+
+📽️ Presentation (2026-05-21): <https://slides.com/f3l1x/2026-05-21-ai-stack/>
 
 A self-hosted docker-based AI infrastructure stack.
 With LLM gateway, observability, vector DB, object storage, workflow engines, browser fleet, and a metrics/logs/traces backend.
@@ -63,10 +65,6 @@ Commands: init | start | stop | restart | logs | ps | status | orbstack:install
 
 
 > Traefik routes `*.yai.orb.local` to every service and serves a navigation dashboard at **<http://yai.orb.local>** with one-click links to every service.
-
-## Talks & media
-
-- 🎤 Presentation (2026-05-21): <https://slides.com/f3l1x/2026-05-21-ai-stack/>
 
 ## Development
 
