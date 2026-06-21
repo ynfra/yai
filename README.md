@@ -1,5 +1,9 @@
 # Ynfra | yAI
 
+[![Watch the video](docs/youtube.png)](https://www.youtube.com/watch?v=Dm7tMzakhuo)
+
+📽️ Presentation (2026-05-21): <https://slides.com/f3l1x/2026-05-21-ai-stack/>
+
 A self-hosted docker-based AI infrastructure stack.
 With LLM gateway, observability, vector DB, object storage, workflow engines, browser fleet, and a metrics/logs/traces backend.
 
