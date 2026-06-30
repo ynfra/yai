@@ -61,10 +61,13 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:24000']
 
-  - job_name: 'langfuse-web'
-    metrics_path: /api/public/metrics
-    static_configs:
-      - targets: ['host.docker.internal:23000']
+  # langfuse v3 exposes no Prometheus endpoint. /api/public/metrics is the
+  # JSON analytics Metrics API (needs a `query` param), and the worker (:3030)
+  # 404s on /metrics. Re-enable only if upstream adds a Prometheus exporter.
+  # - job_name: 'langfuse-web'
+  #   metrics_path: /api/public/metrics
+  #   static_configs:
+  #     - targets: ['host.docker.internal:23000']
 
   - job_name: 'n8n'
     metrics_path: /metrics

@@ -50,7 +50,7 @@ Only two host ports are reachable from outside the loopback interface:
 |------|-----------|---------|----------|---------|
 | 23000 | 3000 | langfuse-web | all interfaces | UI + ingestion API (used by SDK clients) |
 | 23090 | 9000 | langfuse-minio | all interfaces | S3 API — required because media URLs are signed against this endpoint and fetched directly by the user's browser |
-| 23030 | 3030 | langfuse-worker | 127.0.0.1 only | `/api/health` + Prometheus metrics |
+| 23030 | 3030 | langfuse-worker | 127.0.0.1 only | `/api/health` only — Langfuse v3 exposes no Prometheus `/metrics` endpoint |
 | 23091 | 9001 | langfuse-minio | 127.0.0.1 only | MinIO admin console |
 | —     | 5432 | postgres   | internal-only | — |
 | —     | 8123/9000 | clickhouse | internal-only | — |
