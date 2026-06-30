@@ -29,7 +29,7 @@ export YAI_LANGFUSE_SECRET_KEY="${YAI_LANGFUSE_SECRET_KEY:-sk-lf-b781e63c-2ecd-4
 
 # --- Workflow engines ---------------------------------------------------------
 export YAI_N8N_URL="http://localhost:26002"
-export YAI_N8N_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTc3YmRhOS0xNmRkLTQxMGYtYWFiMS0xODFhZGJjYWY4MWMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiOTJkMmVlOWUtMWZhNS00YTFlLTgyOWUtZDgyZWRhNTVmNDVkIiwiaWF0IjoxNzgyODE1OTc4fQ.kJ-dYFBkrjnmYfjVpUH_CYpj2i8U5Za6EfES0JIH_fw"
+export YAI_N8N_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZTBjM2QzMy0yNmFiLTQzMzMtYjFkNC1iZjYxMzUzYWU5YTciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMmEzYTA3OTItMGUwNi00N2NmLWE0ZWYtM2Q5OWZiMWE4NzJhIiwiaWF0IjoxNzgyODMzODI3fQ.Me5CkkPzUGiOl5-hnagv33d9omOC-XC5mJGp_4ViRLg"
 export YAI_WINDMILL_URL="http://localhost:28000"
 
 # --- Data layer --------------------------------------------------------------
