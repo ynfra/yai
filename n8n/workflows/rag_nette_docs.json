@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "924afe69-29b0-4f85-83b2-76ba97d737c6",
+      "id": "7b0fa343-53a8-4b73-a6b8-2d10cec9cf28",
       "name": "When clicking 'Execute workflow'",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -1008,
-        -16
+        -1120,
+        144
       ]
     },
     {
@@ -22,13 +22,13 @@
         "body": "{ \"url\": \"https://doc.nette.org\", \"limit\": 500 }",
         "options": {}
       },
-      "id": "fc-map-node-0001-aabbccdd1122",
+      "id": "7897d121-ce5e-4555-89e1-b989e9760e32",
       "name": "Firecrawl Map Nette",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -784,
-        -144
+        -896,
+        16
       ]
     },
     {
@@ -41,50 +41,51 @@
         "body": "{ \"url\": \"https://contributte.org\", \"limit\": 500 }",
         "options": {}
       },
-      "id": "fc-map-contrib-0001-aabbccdd1122",
+      "id": "7b50b70a-acf2-4489-9535-4f4d249530d9",
       "name": "Firecrawl Map Contributte",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -784,
-        64
-      ]
+        -896,
+        224
+      ],
+      "disabled": true
     },
     {
       "parameters": {},
-      "id": "fc-merge-0001-aabbccdd1122",
+      "id": "75abd929-cd8b-4f36-8631-9ceb3d005663",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -560,
-        -16
+        -672,
+        144
       ]
     },
     {
       "parameters": {
         "jsCode": "const allLinks = [];\nfor (const item of $input.all()) {\n  const links = item.json.links || [];\n  allLinks.push(...links);\n}\n\nconst seen = new Set();\nconst result = [];\nfor (const url of allLinks) {\n  if (seen.has(url)) continue;\n  seen.add(url);\n\n  // Skip anchor URLs\n  if (url.includes('#')) continue;\n\n  // doc.nette.org: English (/en/) only\n  if (url.includes('doc.nette.org') && !/\\/en\\//.test(url)) continue;\n\n  // Only pages on target domains\n  if (!url.includes('doc.nette.org') && !url.includes('contributte.org')) continue;\n\n  result.push({ json: { url } });\n}\n\nreturn result;"
       },
-      "id": "fc-extract-0001-aabbccdd1122",
+      "id": "878e5128-9274-4a2c-8e04-59fe6a0eb0e0",
       "name": "Filter + Deduplicate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -336,
-        -16
+        -448,
+        144
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "fc-loop-node-0001-aabbccdd1122",
+      "id": "94756722-c574-4abd-b962-b5f337e565ef",
       "name": "Loop",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -112,
-        -16
+        -224,
+        144
       ]
     },
     {
@@ -97,13 +98,13 @@
         "body": "={{ JSON.stringify({ filter: { must: [{ key: 'metadata.url', match: { value: $json.url } }] } }) }}",
         "options": {}
       },
-      "id": "fc-check-qdrant-0001-aabbccdd1122",
+      "id": "a55050a3-f0a6-45b5-a99b-50a2b27c0323",
       "name": "Check in Qdrant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        112,
-        -160
+        0,
+        0
       ]
     },
     {
@@ -130,13 +131,13 @@
         },
         "options": {}
       },
-      "id": "fc-if-indexed-0001-aabbccdd1122",
+      "id": "b82ad107-3642-42be-8df4-f8863e54117c",
       "name": "IF Already Indexed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        336,
-        -160
+        224,
+        0
       ]
     },
     {
@@ -149,26 +150,26 @@
         "body": "={{ JSON.stringify({ url: $('Loop').item.json.url, formats: [\"markdown\"] }) }}",
         "options": {}
       },
-      "id": "fc-scrape-0001-aabbccdd1122",
+      "id": "2ce4b9a9-a986-470b-9a36-5f89ac7ecbb0",
       "name": "Firecrawl Scrape",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        560,
-        -160
+        448,
+        0
       ]
     },
     {
       "parameters": {
         "jsCode": "const resp = $input.first().json;\nconst d = resp.data || {};\nconst meta = d.metadata || {};\nreturn [{ json: {\n  text: d.markdown || '',\n  metadata: {\n    url: meta.sourceURL || meta.url || '',\n    title: meta.title || 'Untitled',\n    scraped_at: new Date().toISOString()\n  }\n} }];"
       },
-      "id": "fc-prepare-0001-aabbccdd1122",
+      "id": "dcaacb72-5187-4fcd-a298-cb82c8c32dbd",
       "name": "Prepare Document",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        -160
+        672,
+        0
       ]
     },
     {
@@ -182,17 +183,17 @@
         },
         "options": {}
       },
-      "id": "96eeac6d-7f0e-4123-822a-2f29d642d375",
+      "id": "134bdb7e-5830-4e1a-ae66-06e0ccfbce55",
       "name": "Qdrant Vector Store",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        1008,
-        -96
+        928,
+        16
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "ECJrqkGyQpwbY0c5",
+          "id": "X12N4Iz0B7vQE7nU",
           "name": "yai-qdrant"
         }
       }
@@ -212,15 +213,18 @@
               }
             ]
           }
-        }
+        },
+        "dataType": "json",
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}"
       },
-      "id": "51dc0940-8ecc-432a-a5aa-d008415b14c9",
+      "id": "ea997420-0298-45f4-a240-088d88d5ca73",
       "name": "Default Data Loader",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        1152,
-        144
+        1136,
+        304
       ]
     },
     {
@@ -230,17 +234,17 @@
           "encodingFormat": "float"
         }
       },
-      "id": "61a103d3-cebb-4603-8a09-3f53f926649d",
+      "id": "3cd41506-6c17-4081-8e62-230d6073b623",
       "name": "Embeddings OpenAI",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        1024,
-        144
+        912,
+        304
       ],
       "credentials": {
         "openAiApi": {
-          "id": "7SoM6ZsaObayRno9",
+          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
@@ -260,13 +264,13 @@
           "responseMode": "responseNodes"
         }
       },
-      "id": "cbbe9488-e873-477b-99e5-580f89f1a366",
+      "id": "98faea32-0acb-442c-834d-d52e32e5b200",
       "name": "When chat message received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -944,
-        592
+        -1056,
+        752
       ],
       "webhookId": "b4df3166-f762-43d0-a03a-001194eabdd5"
     },
@@ -276,36 +280,36 @@
           "systemPromptTemplate": "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.\n\nIf you don't know the answer, just say that you don't know, don't try to make up an answer.\n----------------\nContext: {context}"
         }
       },
-      "id": "da6ff462-9ab2-40f4-bb04-80ae563c2852",
+      "id": "fe8cd69d-ff70-4e1a-a333-98d7bf62dc64",
       "name": "Question and Answer Chain",
       "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
       "typeVersion": 1.7,
       "position": [
-        -608,
-        592
+        -720,
+        752
       ]
     },
     {
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "=openrouter/openai/gpt-oss-120b:free",
+          "value": "openrouter/google/gemini-2.5-flash-lite",
           "mode": "id"
         },
         "builtInTools": {},
         "options": {}
       },
-      "id": "a8ea43a4-4b50-44a1-a47d-6de13408779e",
+      "id": "81207463-433c-4f59-a4b0-8e1414859fcc",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        -672,
-        816
+        -784,
+        976
       ],
       "credentials": {
         "openAiApi": {
-          "id": "7SoM6ZsaObayRno9",
+          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
@@ -314,13 +318,13 @@
       "parameters": {
         "topK": 10
       },
-      "id": "82b691d6-f437-43ea-ad81-9dbe015cf5f7",
+      "id": "a7a612fd-f706-4d17-8579-aa9cff3df7da",
       "name": "Vector Store Retriever",
       "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
       "typeVersion": 1,
       "position": [
-        -512,
-        816
+        -624,
+        976
       ]
     },
     {
@@ -336,17 +340,17 @@
           "metadataPayloadKey": "metadata"
         }
       },
-      "id": "35f052bb-fa90-402d-86b3-b77628638307",
+      "id": "3708e568-d126-4d1c-8ae1-d82159ecc39b",
       "name": "Qdrant Vector Store1",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        -512,
-        1024
+        -624,
+        1184
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "ECJrqkGyQpwbY0c5",
+          "id": "X12N4Iz0B7vQE7nU",
           "name": "yai-qdrant"
         }
       }
@@ -358,50 +362,33 @@
           "encodingFormat": "float"
         }
       },
-      "id": "b19a1fae-14a8-4bdc-b0f8-8a2556560b86",
+      "id": "6c4b229e-8705-46e9-aedc-ddf9f9f6e6be",
       "name": "Embeddings OpenAI1",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -432,
-        1232
+        -544,
+        1392
       ],
       "credentials": {
         "openAiApi": {
-          "id": "7SoM6ZsaObayRno9",
+          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
     },
     {
       "parameters": {
-        "memoryKey": {
-          "__rl": true,
-          "mode": "list",
-          "value": "vector_store_key"
-        }
-      },
-      "id": "662acfdd-e104-4927-8c41-b0d26fdcdbf9",
-      "name": "Simple Vector Store",
-      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
-      "typeVersion": 1.3,
-      "position": [
-        -224,
-        1024
-      ]
-    },
-    {
-      "parameters": {
         "message": "={{ $json.response }}",
         "options": {}
       },
-      "id": "8a604aaf-3fd7-4ecc-95d7-7c3ca3a296bb",
+      "id": "61653527-7343-4851-b4dd-538cd5816a7e",
       "name": "Chat",
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -144,
-        592
+        -256,
+        752
       ],
       "webhookId": "db7beb0d-9623-4cb3-b390-a84dde563660"
     }
@@ -625,23 +612,12 @@
             "node": "Qdrant Vector Store1",
             "type": "ai_embedding",
             "index": 0
-          },
-          {
-            "node": "Simple Vector Store",
-            "type": "ai_embedding",
-            "index": 0
           }
         ]
-      ]
-    },
-    "Simple Vector Store": {
-      "ai_vectorStore": [
-        []
       ]
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate"
+    "executionOrder": "v1"
   }
 }
