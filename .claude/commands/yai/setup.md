@@ -20,6 +20,17 @@ Abort with a clear error if:
 - docker CLI or daemon is missing (FAIL in toolchain)
 - `jq` is missing → install: `sudo apt-get install -y jq`
 
+If `docker group` shows FAIL/WARN and docker commands fail with "permission
+denied", run all `./yai.sh` commands prefixed with `sudo sg docker -c "..."`:
+```sh
+sudo sg docker -c "./yai.sh init all"
+sudo sg docker -c "./yai.sh start postgres"
+```
+Or log out and back in to apply group membership, then retry without `sudo`.
+
+If the repo directory is owned by root, `init` and `start` also need `sudo`.
+Combine both with `sudo sg docker -c "./yai.sh ..."`.
+
 ## Step 1 — Generate secrets into `.env.local` files
 
 `yai.sh` loads `.env` then `.env.local` via `--env-file` for every service.
@@ -54,8 +65,13 @@ After updating the `.env` files, update `env.sh`:
 ./yai.sh init all
 ```
 
-The postgres data directory must be empty before first start — Docker used to
-auto-create a `socket/` subdir there; verify it's clean:
+This creates all bind-mount directories and applies correct ownership for
+services that run as non-root UIDs:
+- ClickHouse → UID 101
+- Grafana → UID 472
+- n8n → chmod 777 (OrbStack bind-mount quirk)
+
+The postgres data directory must be empty before first start:
 ```sh
 ls postgres/data/   # must be empty
 ```
@@ -71,7 +87,7 @@ Wait for postgres to be healthy before continuing.
 
 ## Step 4 — Start remaining services
 
-Start in this order to respect dependency chains:
+`start` accepts multiple service names or `all`:
 
 ```sh
 ./yai.sh start minio qdrant browserless
@@ -87,8 +103,8 @@ Start in this order to respect dependency chains:
 ./yai.sh doctor
 ```
 
-Expected final state: all services `UP` (minio shows `PARTIAL` — normal, init
-container exits after seeding), all `.ENV env`, all `DATA OK`.
+Expected final state: all services `UP`, all `.ENV env`, all `DATA OK`.
+(minio shows `PARTIAL` — normal, init container exits after seeding buckets.)
 
 ## Post-setup notes
 

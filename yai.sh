@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Order matters: shared infrastructure first, then services that consume it.
 # vmetrics must start before grafana (datasource); vlogs/vtraces can be parallel.
-SERVICES=(postgres minio qdrant browserless firecrawl n8n litellm langfuse vmetrics vlogs vtraces vector node-exporter grafana traefik)
+SERVICES=(postgres minio qdrant browserless firecrawl n8n litellm langfuse windmill vmetrics vlogs vtraces vector node-exporter grafana traefik)
 
 usage() {
     cat <<EOF
@@ -55,14 +55,22 @@ valid_service() {
 }
 
 resolve_services() {
-    local target="${1:-all}"
-    if [[ "$target" == "all" ]]; then
-        echo "${SERVICES[@]}"
-    elif valid_service "$target"; then
-        echo "$target"
-    else
-        die "Unknown service: '$target'. Valid: ${SERVICES[*]}, all"
-    fi
+    # Accepts one or more targets (service names or "all"); deduplicates while preserving order
+    local -A seen=()
+    local result=()
+    local target
+    for target in "${@:-all}"; do
+        if [[ "$target" == "all" ]]; then
+            for s in "${SERVICES[@]}"; do
+                [[ -z "${seen[$s]:-}" ]] && { result+=("$s"); seen["$s"]=1; }
+            done
+        elif valid_service "$target"; then
+            [[ -z "${seen[$target]:-}" ]] && { result+=("$target"); seen["$target"]=1; }
+        else
+            die "Unknown service: '$target'. Valid: ${SERVICES[*]}, all"
+        fi
+    done
+    echo "${result[@]}"
 }
 
 compose() {
@@ -87,15 +95,27 @@ ensure_data_dirs() {
         browserless) ;;  # stateless
         traefik)     ;;  # stateless; config files are tracked in git
         firecrawl)   mkdir -p "$dir/data/redis" "$dir/data/rabbitmq" "$dir/data/postgres" ;;
-        n8n)         mkdir -p "$dir/data/postgres" "$dir/data/n8n" "$dir/data/redis" ;;
+        n8n)
+            mkdir -p "$dir/data/postgres" "$dir/data/n8n" "$dir/data/redis"
+            # n8n runs as UID 1000 (node); world-writable required on OrbStack bind mounts
+            chmod 777 "$dir/data/n8n" 2>/dev/null || true
+            ;;
         litellm)     ;;  # uses shared postgres
-        langfuse)    mkdir -p "$dir/data/postgres" "$dir/data/clickhouse/data" \
-                              "$dir/data/clickhouse/logs" "$dir/data/minio" "$dir/data/redis" ;;
-        windmill)    ;; # disabled
+        langfuse)
+            mkdir -p "$dir/data/postgres" "$dir/data/clickhouse/data" \
+                     "$dir/data/clickhouse/logs" "$dir/data/minio" "$dir/data/redis"
+            # ClickHouse runs as UID 101
+            chown -R 101:101 "$dir/data/clickhouse" 2>/dev/null || true
+            ;;
+        windmill)    mkdir -p "$dir/data/postgres" "$dir/data/logs" "$dir/data/cache" ;;
         vmetrics) mkdir -p "$dir/data" ;;
         vlogs)    mkdir -p "$dir/data" ;;
         vtraces)  mkdir -p "$dir/data" ;;
-        grafana)  mkdir -p "$dir/data/grafana" ;;
+        grafana)
+            mkdir -p "$dir/data/grafana"
+            # Grafana runs as UID 472
+            chown -R 472:472 "$dir/data/grafana" 2>/dev/null || true
+            ;;
     esac
 }
 
@@ -109,7 +129,7 @@ ensure_infra_network() {
 cmd_init() {
     ensure_infra_network
     local services
-    read -ra services <<< "$(resolve_services "${1:-all}")"
+    read -ra services <<< "$(resolve_services "$@")"
     for svc in "${services[@]}"; do
         local dir="$SCRIPT_DIR/$svc"
         echo "--- Initializing $svc ---"
@@ -123,7 +143,7 @@ cmd_init() {
 cmd_start() {
     ensure_infra_network
     local services
-    read -ra services <<< "$(resolve_services "${1:-all}")"
+    read -ra services <<< "$(resolve_services "$@")"
     for svc in "${services[@]}"; do
         echo "--- Starting $svc ---"
         ensure_data_dirs "$svc"
@@ -132,11 +152,10 @@ cmd_start() {
 }
 
 cmd_stop() {
-    local target="${1:-all}"
     local services
-    read -ra services <<< "$(resolve_services "$target")"
+    read -ra services <<< "$(resolve_services "$@")"
     # Reverse for clean shutdown when stopping everything
-    if [[ "$target" == "all" ]]; then
+    if [[ $# -eq 0 || ( $# -eq 1 && "${1:-}" == "all" ) ]]; then
         local reversed=()
         for (( i=${#services[@]}-1; i>=0; i-- )); do reversed+=("${services[$i]}"); done
         services=("${reversed[@]}")
@@ -149,7 +168,7 @@ cmd_stop() {
 
 cmd_restart() {
     local services
-    read -ra services <<< "$(resolve_services "${1:-all}")"
+    read -ra services <<< "$(resolve_services "$@")"
     for svc in "${services[@]}"; do
         echo "--- Restarting $svc ---"
         compose "$svc" restart
@@ -165,7 +184,7 @@ cmd_logs() {
 
 cmd_ps() {
     local services
-    read -ra services <<< "$(resolve_services "${1:-all}")"
+    read -ra services <<< "$(resolve_services "$@")"
     for svc in "${services[@]}"; do
         echo "--- $svc ---"
         compose "$svc" ps
@@ -256,7 +275,7 @@ doctor_data_dirs() {
         n8n)         echo "$dir/data/postgres" "$dir/data/n8n" "$dir/data/redis" ;;
         langfuse)    echo "$dir/data/postgres" "$dir/data/clickhouse/data" \
                               "$dir/data/clickhouse/logs" "$dir/data/minio" "$dir/data/redis" ;;
-        windmill)    ;; # disabled
+        windmill)    echo "$dir/data/postgres" "$dir/data/logs" "$dir/data/cache" ;;
         vmetrics) echo "$dir/data" ;;
         vlogs)    echo "$dir/data" ;;
         vtraces)  echo "$dir/data" ;;
@@ -470,12 +489,12 @@ cmd_doctor() {
 dispatch() {
     local cmd="${1:-}"; shift || true
     case "$cmd" in
-        init)            cmd_init    "${1:-all}" ;;
-        start|up)        cmd_start   "${1:-all}" ;;
-        stop|down)       cmd_stop    "${1:-all}" ;;
-        restart)         cmd_restart "${1:-all}" ;;
+        init)            cmd_init    "$@" ;;
+        start|up)        cmd_start   "$@" ;;
+        stop|down)       cmd_stop    "$@" ;;
+        restart)         cmd_restart "$@" ;;
         logs)            cmd_logs    "${1:-}" ;;
-        ps|status)       cmd_ps      "${1:-all}" ;;
+        ps|status)       cmd_ps      "$@" ;;
         help|-h|--help)  usage ;;
         '')              usage ;;
         *)               die "Unknown command: '$cmd'. Run '$(basename "$0") help'." ;;
