@@ -5,7 +5,7 @@ name: yai-vmetrics
 
 services:
   vmetrics:
-    image: victoriametrics/victoria-metrics:${VM_VERSION:-v1.143.0}
+    image: victoriametrics/victoria-metrics:${VM_VERSION:-v1.146.0}
     container_name: yai-vmetrics
     restart: unless-stopped
     ports:
