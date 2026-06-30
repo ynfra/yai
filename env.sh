@@ -20,8 +20,7 @@ export YAI_GRAFANA_TOKEN="${YAI_GRAFANA_TOKEN:-glsa_v7ciRwcJ0fFONuhN239twkeRBK3J
 
 # --- LLM gateway (litellm/) --------------------------------------------------
 export YAI_LITELLM_URL="http://localhost:24000"
-# Copy from litellm/.env LITELLM_MASTER_KEY after rotating it.
-export YAI_LITELLM_MASTER_KEY="sk-c2080a1a1d02dafa6793d73fae906c2886c44911b66c45d248accee31fc2dd2c"
+export YAI_LITELLM_MASTER_KEY="Admin1234!"
 
 # --- LLM observability (langfuse/) -------------------------------------------
 export YAI_LANGFUSE_URL="http://localhost:23000"
@@ -30,7 +29,7 @@ export YAI_LANGFUSE_SECRET_KEY="${YAI_LANGFUSE_SECRET_KEY:-sk-lf-b781e63c-2ecd-4
 
 # --- Workflow engines ---------------------------------------------------------
 export YAI_N8N_URL="http://localhost:26002"
-export YAI_N8N_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZjQ3NDE2OS1kZmZlLTQ1M2MtYTU4NC1mZWZiNTNlNmIxN2IiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiOThiZWQ4MjgtNzhkMC00ZWQ5LTg4ZmYtN2M1OTVkMjZjMGQzIiwiaWF0IjoxNzc5MTg0OTE5fQ.iPBAL7tkS64WX1XqPlTjUBD2utwq989Tup_dhPrYyLE"
+export YAI_N8N_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTc3YmRhOS0xNmRkLTQxMGYtYWFiMS0xODFhZGJjYWY4MWMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiOTJkMmVlOWUtMWZhNS00YTFlLTgyOWUtZDgyZWRhNTVmNDVkIiwiaWF0IjoxNzgyODE1OTc4fQ.kJ-dYFBkrjnmYfjVpUH_CYpj2i8U5Za6EfES0JIH_fw"
 export YAI_WINDMILL_URL="http://localhost:28000"
 
 # --- Data layer --------------------------------------------------------------
