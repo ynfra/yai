@@ -2,7 +2,7 @@ name: yai-vector
 
 services:
   vector:
-    image: timberio/vector:${VECTOR_VERSION:-0.44.0-debian}
+    image: timberio/vector:${VECTOR_VERSION:-0.56.0-debian}
     container_name: yai-vector
     restart: unless-stopped
     volumes:
