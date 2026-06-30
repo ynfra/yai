@@ -193,13 +193,14 @@
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "X12N4Iz0B7vQE7nU",
           "name": "yai-qdrant"
         }
       }
     },
     {
       "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
         "options": {
           "metadata": {
             "metadataValues": [
@@ -213,10 +214,7 @@
               }
             ]
           }
-        },
-        "dataType": "json",
-        "jsonMode": "expressionData",
-        "jsonData": "={{ $json.text }}"
+        }
       },
       "id": "ea997420-0298-45f4-a240-088d88d5ca73",
       "name": "Default Data Loader",
@@ -244,7 +242,6 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
@@ -261,7 +258,7 @@
           ]
         },
         "options": {
-          "responseMode": "responseNodes"
+          "responseMode": "lastNode"
         }
       },
       "id": "98faea32-0acb-442c-834d-d52e32e5b200",
@@ -269,25 +266,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -1056,
-        752
+        -976,
+        784
       ],
       "webhookId": "b4df3166-f762-43d0-a03a-001194eabdd5"
-    },
-    {
-      "parameters": {
-        "options": {
-          "systemPromptTemplate": "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.\n\nIf you don't know the answer, just say that you don't know, don't try to make up an answer.\n----------------\nContext: {context}"
-        }
-      },
-      "id": "fe8cd69d-ff70-4e1a-a333-98d7bf62dc64",
-      "name": "Question and Answer Chain",
-      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
-      "typeVersion": 1.7,
-      "position": [
-        -720,
-        752
-      ]
     },
     {
       "parameters": {
@@ -309,23 +291,9 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
-    },
-    {
-      "parameters": {
-        "topK": 10
-      },
-      "id": "a7a612fd-f706-4d17-8579-aa9cff3df7da",
-      "name": "Vector Store Retriever",
-      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
-      "typeVersion": 1,
-      "position": [
-        -624,
-        976
-      ]
     },
     {
       "parameters": {
@@ -338,19 +306,22 @@
         "options": {
           "contentPayloadKey": "content",
           "metadataPayloadKey": "metadata"
-        }
+        },
+        "mode": "retrieve-as-tool",
+        "toolName": "nette_docs",
+        "toolDescription": "Search the Nette / Contributte documentation knowledge base. Input a natural-language query; returns the most relevant documentation passages.",
+        "topK": 6
       },
       "id": "3708e568-d126-4d1c-8ae1-d82159ecc39b",
       "name": "Qdrant Vector Store1",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        -624,
-        1184
+        -496,
+        1232
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "X12N4Iz0B7vQE7nU",
           "name": "yai-qdrant"
         }
       }
@@ -372,25 +343,24 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
     },
     {
       "parameters": {
-        "message": "={{ $json.response }}",
-        "options": {}
+        "promptType": "auto",
+        "options": {
+          "systemMessage": "You are a helpful assistant for the Nette and Contributte PHP frameworks. Always use the nette_docs tool to look up relevant documentation before answering. If the docs don't contain the answer, say so."
+        }
       },
-      "id": "61653527-7343-4851-b4dd-538cd5816a7e",
-      "name": "Chat",
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "name": "AI Agent",
       "position": [
-        -256,
-        752
-      ],
-      "webhookId": "db7beb0d-9623-4cb3-b390-a84dde563660"
+        -640,
+        784
+      ]
     }
   ],
   "connections": {
@@ -554,18 +524,7 @@
       "main": [
         [
           {
-            "node": "Question and Answer Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Question and Answer Chain": {
-      "main": [
-        [
-          {
-            "node": "Chat",
+            "node": "AI Agent",
             "type": "main",
             "index": 0
           }
@@ -576,30 +535,19 @@
       "ai_languageModel": [
         [
           {
-            "node": "Question and Answer Chain",
+            "node": "AI Agent",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "Vector Store Retriever": {
-      "ai_retriever": [
-        [
-          {
-            "node": "Question and Answer Chain",
-            "type": "ai_retriever",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Qdrant Vector Store1": {
-      "ai_vectorStore": [
+      "ai_tool": [
         [
           {
-            "node": "Vector Store Retriever",
-            "type": "ai_vectorStore",
+            "node": "AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]

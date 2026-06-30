@@ -1,0 +1,180 @@
+{
+  "name": "[Cand] Company Research & Lead Enrichment (Firecrawl → Extractor → Postgres)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "le-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "le-set-1",
+              "name": "company",
+              "type": "string",
+              "value": "Nette Foundation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "le-02",
+      "name": "Set Company",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "query": "CREATE TABLE IF NOT EXISTS lead_enrichment (\n  id SERIAL PRIMARY KEY,\n  company_name TEXT,\n  website TEXT,\n  industry TEXT,\n  description TEXT,\n  hq_location TEXT,\n  employee_range TEXT,\n  key_products TEXT,\n  source_url TEXT,\n  enriched_at TIMESTAMPTZ DEFAULT now()\n);",
+        "options": {}
+      },
+      "id": "le-03",
+      "name": "Ensure Table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [440, 0],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/search",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({query: $('Set Company').item.json.company + ' official website', limit: 3}) }}",
+        "options": {}
+      },
+      "id": "le-04",
+      "name": "Firecrawl Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst results = resp.data || [];\nconst top = results[0] || {};\nreturn [{json: {url: top.url || ''}}];"
+      },
+      "id": "le-05",
+      "name": "Pick Top URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/scrape",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, formats: ['markdown']}) }}",
+        "options": {}
+      },
+      "id": "le-06",
+      "name": "Firecrawl Scrape",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst d = resp.data || {};\nreturn [{json: {markdown: (d.markdown || '').slice(0, 12000), source_url: (d.metadata && (d.metadata.sourceURL || d.metadata.url)) || $('Pick Top URL').item.json.url}}];"
+      },
+      "id": "le-07",
+      "name": "Prepare Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 0]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.markdown }}",
+        "schemaType": "fromAttributes",
+        "attributes": {
+          "attributes": [
+            {"name": "company_name", "type": "string", "description": "Official company / organisation name", "required": true},
+            {"name": "industry", "type": "string", "description": "Primary industry or sector"},
+            {"name": "description", "type": "string", "description": "One-sentence summary of what the company does"},
+            {"name": "hq_location", "type": "string", "description": "Headquarters city and country if stated"},
+            {"name": "employee_range", "type": "string", "description": "Approximate company size / employee range if stated"},
+            {"name": "key_products", "type": "string", "description": "Main products or services, comma separated"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "le-08",
+      "name": "Information Extractor",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.1,
+      "position": [1540, 0]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "le-09",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [1540, 224],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "INSERT INTO lead_enrichment (company_name, website, industry, description, hq_location, employee_range, key_products, source_url)\nVALUES ($1,$2,$3,$4,$5,$6,$7,$8);",
+        "options": {
+          "queryReplacement": "={{ [$json.output.company_name, $('Prepare Text').item.json.source_url, $json.output.industry, $json.output.description, $json.output.hq_location, $json.output.employee_range, $json.output.key_products, $('Prepare Text').item.json.source_url] }}"
+        }
+      },
+      "id": "le-10",
+      "name": "Insert Row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1760, 0],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Set Company", "type": "main", "index": 0}]]},
+    "Set Company": {"main": [[{"node": "Ensure Table", "type": "main", "index": 0}]]},
+    "Ensure Table": {"main": [[{"node": "Firecrawl Search", "type": "main", "index": 0}]]},
+    "Firecrawl Search": {"main": [[{"node": "Pick Top URL", "type": "main", "index": 0}]]},
+    "Pick Top URL": {"main": [[{"node": "Firecrawl Scrape", "type": "main", "index": 0}]]},
+    "Firecrawl Scrape": {"main": [[{"node": "Prepare Text", "type": "main", "index": 0}]]},
+    "Prepare Text": {"main": [[{"node": "Information Extractor", "type": "main", "index": 0}]]},
+    "Information Extractor": {"main": [[{"node": "Insert Row", "type": "main", "index": 0}]]},
+    "LiteLLM": {"ai_languageModel": [[{"node": "Information Extractor", "type": "ai_languageModel", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

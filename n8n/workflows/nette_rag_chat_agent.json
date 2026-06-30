@@ -1,0 +1,96 @@
+{
+  "name": "Nette RAG (Chat Agent)",
+  "nodes": [
+    {
+      "id": "nra-01",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [0, 0],
+      "parameters": {
+        "mode": "hostedChat",
+        "public": false,
+        "availableInChat": true,
+        "agentName": "Nette RAG",
+        "agentDescription": "Answers questions about the Nette PHP framework and Contributte add-ons using the official documentation (doc.nette.org). Searches the indexed docs and answers with source links.",
+        "options": {
+          "responseMode": "streaming"
+        }
+      }
+    },
+    {
+      "id": "nra-02",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [280, 0],
+      "parameters": {
+        "promptType": "auto",
+        "options": {
+          "enableStreaming": true,
+          "systemMessage": "You are a helpful assistant specialised in the Nette PHP framework and the Contributte add-ons.\n\nWhenever the user asks anything about Nette, Latte, Tracy, forms, dependency injection, routing, presenters/components or any Nette/Contributte feature, FIRST call the \"Nette Docs RAG\" tool to retrieve relevant passages from the official documentation. Base your answer on the retrieved passages and cite the source URLs you used. If the documentation does not cover the question, say so plainly rather than guessing."
+        }
+      }
+    },
+    {
+      "id": "nra-03",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [180, 240],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": { "id": "TprFxcZ1iNKkotHG", "name": "yai-litellm" }
+      }
+    },
+    {
+      "id": "nra-04",
+      "name": "Nette Docs RAG",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [420, 240],
+      "parameters": {
+        "description": "Search the official Nette PHP framework documentation (doc.nette.org) and Contributte add-ons for relevant passages. Input: a natural-language search query. Returns the most relevant documentation passages, each with its source URL.",
+        "workflowId": {
+          "__rl": true,
+          "value": "8m7dwFOIEGvrjJ7X",
+          "mode": "list",
+          "cachedResultName": "Nette RAG (Tool)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'The natural-language question or search query about Nette to look up in the documentation', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "query", "displayName": "query", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
+    },
+    "LiteLLM": {
+      "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Nette Docs RAG": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

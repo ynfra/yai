@@ -1,0 +1,129 @@
+{
+  "name": "[Cand] Multi-Step Reasoning Agent (LiteLLM + Postgres memory + Langfuse)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ra-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ra-set-1",
+              "name": "task",
+              "type": "string",
+              "value": "A data pipeline ingests 4 sources. Source A emits 1200 records/min, B 850, C 430, D 0 (offline). Each record is 2.5 KB. (1) Plan how you'll answer. (2) Compute the total throughput in MB/min. (3) If we must stay under 5 MB/min, by what percentage must we shed load? (4) Recommend which source to throttle and why."
+            },
+            {
+              "id": "ra-set-2",
+              "name": "session_id",
+              "type": "string",
+              "value": "reasoning-demo-1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ra-02",
+      "name": "Set Task",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.task }}",
+        "options": {
+          "systemMessage": "You are a rigorous reasoning agent. ALWAYS work in explicit steps:\n1. First call the `plan` tool to lay out the sub-steps you will take.\n2. Use the `calculator` tool for EVERY arithmetic operation — never compute in your head.\n3. Use `get_time` if the task involves the current time.\n4. After executing your plan, give a concise final answer that references the intermediate results.\nNever skip the planning step. Keep the final answer factual and tight.",
+          "maxIterations": 12
+        }
+      },
+      "id": "ra-03",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [560, 0]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/openai/gpt-oss-120b:free",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "ra-04",
+      "name": "LiteLLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [420, 224],
+      "credentials": {
+        "openAiApi": {"id": "7SoM6ZsaObayRno9", "name": "yai-litellm"}
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set Task').item.json.session_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "ra-05",
+      "name": "Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [548, 224]
+    },
+    {
+      "parameters": {
+        "name": "plan",
+        "description": "Record an explicit, ordered list of the sub-steps you intend to take before executing them. Input: a numbered plan as plain text. Returns the plan back so you can follow it.",
+        "jsCode": "return `PLAN ACKNOWLEDGED:\\n${query}`;"
+      },
+      "id": "ra-06",
+      "name": "Plan",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [676, 224]
+    },
+    {
+      "parameters": {},
+      "id": "ra-07",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [804, 224]
+    },
+    {
+      "parameters": {
+        "description": "Returns the current UTC date and time as an ISO 8601 string.",
+        "jsCode": "return new Date().toISOString();"
+      },
+      "id": "ra-08",
+      "name": "Get Time",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [932, 224]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Set Task", "type": "main", "index": 0}]]},
+    "Set Task": {"main": [[{"node": "AI Agent", "type": "main", "index": 0}]]},
+    "LiteLLM": {"ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]},
+    "Buffer Memory": {"ai_memory": [[{"node": "AI Agent", "type": "ai_memory", "index": 0}]]},
+    "Plan": {"ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]},
+    "Calculator": {"ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]},
+    "Get Time": {"ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

@@ -72,7 +72,7 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "7SoM6ZsaObayRno9",
+          "id": "TprFxcZ1iNKkotHG",
           "name": "yai-litellm"
         }
       }
@@ -177,6 +177,45 @@
         1088,
         224
       ]
+    },
+    {
+      "id": "nrt-tool-01",
+      "name": "Nette Docs RAG",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        424
+      ],
+      "parameters": {
+        "description": "Search the official Nette PHP framework documentation (doc.nette.org) and Contributte add-ons for relevant passages. Use this whenever the user asks about Nette, Latte templates, Tracy, Nette forms, dependency injection, routing, presenters/components, or any Nette/Contributte feature. Input: a natural-language search query. Returns the most relevant documentation passages, each with its source URL.",
+        "workflowId": {
+          "__rl": true,
+          "value": "8m7dwFOIEGvrjJ7X",
+          "mode": "list",
+          "cachedResultName": "Nette RAG (Tool)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'The natural-language question or search query about Nette to look up in the documentation', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      }
     }
   ],
   "connections": {
@@ -267,10 +306,20 @@
           }
         ]
       ]
+    },
+    "Nette Docs RAG": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate"
+    "executionOrder": "v1"
   }
 }
