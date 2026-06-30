@@ -2,7 +2,7 @@ name: yai-traefik
 
 services:
   traefik:
-    image: traefik:${TRAEFIK_VERSION:-v3.3}
+    image: traefik:${TRAEFIK_VERSION:-v3.7.5}
     container_name: yai-traefik
     restart: unless-stopped
     labels:
