@@ -52,10 +52,6 @@ services:
   postgres:
     image: postgres:17.10
     restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run/postgresql
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
