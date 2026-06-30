@@ -2,7 +2,7 @@ name: yai-litellm
 
 services:
   litellm:
-    image: litellm/litellm:${LITELLM_VERSION:-v1.85.0}
+    image: litellm/litellm:${LITELLM_VERSION:-v1.90.0}
     container_name: yai-litellm
     restart: unless-stopped
     ports:
