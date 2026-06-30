@@ -28,8 +28,8 @@ container restarts.
 ```
 
 Every service is reachable on its direct host port. Traefik also exposes all
-services via `<service>.localhost:27000` hostname routing and a navigation
-dashboard at `http://localhost:27000`.
+services via `<service>.localhost` hostname routing on port 80 and a navigation
+dashboard at `http://localhost` (port 80). Traefik's own API is on `:27001`.
 
 ## Services
 
@@ -185,9 +185,9 @@ logs via the Loki-compatible push API at
   env var (`<SERVICE>_VERSION`) with a hard-pinned default. Update the
   default, not just the env file, so a fresh checkout uses the same version.
 - **Port collisions**: every yai service has a unique host port. The current
-  allocation lives in the table above; preserve it when adding new services
-  (27000–27002 are freed since agent-browser moved to a host skill; next free
-  range: 27000+).
+  allocation lives in the table above; preserve it when adding new services.
+  Note `27001` is taken by Traefik's API; `27000` and `27002` are free since
+  agent-browser moved to a host skill.
 - **Postgres ownership**: only `postgres/` is the shared instance. `n8n`,
   `windmill`, `firecrawl`, and `langfuse` each embed their own DB on an
   internal-only network. Do not "consolidate" these onto the shared

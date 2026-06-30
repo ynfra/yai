@@ -140,15 +140,30 @@ cmd_init() {
     done
 }
 
+start_one() {
+    local svc="$1"
+    echo "--- Starting $svc ---"
+    ensure_data_dirs "$svc"
+    compose "$svc" up -d
+}
+
+# start takes a single service or "all" — not a list. "all" walks SERVICES in
+# dependency order (postgres first … grafana/traefik last) and is resilient:
+# one service failing is reported but does not abort the rest of the sequence.
 cmd_start() {
     ensure_infra_network
-    local services
-    read -ra services <<< "$(resolve_services "$@")"
-    for svc in "${services[@]}"; do
-        echo "--- Starting $svc ---"
-        ensure_data_dirs "$svc"
-        compose "$svc" up -d
-    done
+    (( $# <= 1 )) || die "start takes a single service or 'all', not a list. Use 'all' to start everything in order, or start one at a time."
+    local target="${1:-all}"
+    if [[ "$target" == "all" ]]; then
+        local failed=()
+        for svc in "${SERVICES[@]}"; do
+            start_one "$svc" || failed+=("$svc")
+        done
+        (( ${#failed[@]} == 0 )) || die "failed to start: ${failed[*]}"
+    else
+        valid_service "$target" || die "Unknown service: '$target'. Valid: ${SERVICES[*]}, all"
+        start_one "$target"
+    fi
 }
 
 cmd_stop() {
