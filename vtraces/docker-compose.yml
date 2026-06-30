@@ -2,7 +2,7 @@ name: yai-vtraces
 
 services:
   vtraces:
-    image: victoriametrics/victoria-traces:${VT_VERSION:-v0.8.2}
+    image: victoriametrics/victoria-traces:${VT_VERSION:-v0.9.3}
     container_name: yai-vtraces
     restart: unless-stopped
     ports:
