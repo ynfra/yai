@@ -1,0 +1,209 @@
+{
+  "name": "KB Ingest: PDF (MinIO -> Qdrant)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "pk-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1000, 0]
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "getAll",
+        "bucketName": "documents",
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "pk-02",
+      "name": "S3 List Objects",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [-780, 0],
+      "credentials": {
+        "s3": {
+          "id": "gf112X0cl1HG0S8k",
+          "name": "yai-minio-s3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keep only PDF objects; emit one item per key.\nconst out = [];\nfor (const item of $input.all()) {\n  const key = item.json.Key || item.json.key || '';\n  if (/\\.pdf$/i.test(key)) out.push({ json: { Key: key } });\n}\nreturn out;"
+      },
+      "id": "pk-03",
+      "name": "Filter PDFs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-560, 0]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "pk-04",
+      "name": "Loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-340, 0]
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "download",
+        "bucketName": "documents",
+        "fileKey": "={{ $json.Key }}",
+        "options": {}
+      },
+      "id": "pk-05",
+      "name": "S3 Download",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [-120, 100],
+      "credentials": {
+        "s3": {
+          "id": "gf112X0cl1HG0S8k",
+          "name": "yai-minio-s3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "pk-06",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [100, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const key = $('Loop').item.json.Key;\nconst text = $input.first().json.text || '';\nreturn [{ json: {\n  text,\n  metadata: {\n    bucket: 'documents',\n    key,\n    url: 's3://documents/' + key,\n    title: key.split('/').pop(),\n    ingested_at: new Date().toISOString()\n  }\n} }];"
+      },
+      "id": "pk-07",
+      "name": "Prepare Document",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 100]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "pdf_kb",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "pk-08",
+      "name": "Qdrant Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [560, 100],
+      "credentials": {
+        "qdrantApi": {
+          "id": "KtAQHFYLAhtuImNo",
+          "name": "yai-qdrant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "=openrouter/nvidia/llama-nemotron-embed-vl-1b-v2:free",
+        "options": {
+          "encodingFormat": "float"
+        }
+      },
+      "id": "pk-09",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [480, 320],
+      "credentials": {
+        "openAiApi": {
+          "id": "XCNfqBJBUQGjrCbU",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              { "name": "url", "value": "={{ $json.metadata.url }}" },
+              { "name": "title", "value": "={{ $json.metadata.title }}" },
+              { "name": "key", "value": "={{ $json.metadata.key }}" }
+            ]
+          }
+        }
+      },
+      "id": "pk-10",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [700, 320]
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 80,
+        "options": {}
+      },
+      "id": "pk-11",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacter",
+      "typeVersion": 1,
+      "position": [900, 480]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "S3 List Objects", "type": "main", "index": 0 }]]
+    },
+    "S3 List Objects": {
+      "main": [[{ "node": "Filter PDFs", "type": "main", "index": 0 }]]
+    },
+    "Filter PDFs": {
+      "main": [[{ "node": "Loop", "type": "main", "index": 0 }]]
+    },
+    "Loop": {
+      "main": [
+        [],
+        [{ "node": "S3 Download", "type": "main", "index": 0 }]
+      ]
+    },
+    "S3 Download": {
+      "main": [[{ "node": "Extract PDF Text", "type": "main", "index": 0 }]]
+    },
+    "Extract PDF Text": {
+      "main": [[{ "node": "Prepare Document", "type": "main", "index": 0 }]]
+    },
+    "Prepare Document": {
+      "main": [[{ "node": "Qdrant Vector Store", "type": "main", "index": 0 }]]
+    },
+    "Qdrant Vector Store": {
+      "main": [[{ "node": "Loop", "type": "main", "index": 0 }]]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [[{ "node": "Qdrant Vector Store", "type": "ai_embedding", "index": 0 }]]
+    },
+    "Default Data Loader": {
+      "ai_document": [[{ "node": "Qdrant Vector Store", "type": "ai_document", "index": 0 }]]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [[{ "node": "Default Data Loader", "type": "ai_textSplitter", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

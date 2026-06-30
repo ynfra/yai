@@ -1,0 +1,142 @@
+{
+  "name": "Multi-Agent: Coordinator",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "mc-01",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [-720, 0],
+      "webhookId": "ab12cd34-coor-4d55-8e66-multiagent01"
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "options": {
+          "systemMessage": "You are a coordinator agent. You do not answer directly from your own knowledge; you delegate to specialist sub-agents and synthesise their results.\n\nRouting rules:\n- Questions about the Nette / Contributte PHP frameworks (Latte, Tracy, DI, presenters, forms, routing) -> use the \"Nette Docs Specialist\" tool.\n- Anything requiring current information from the open web (companies, news, product facts, general research) -> use the \"Web Research Specialist\" tool.\n- For broad questions you may call more than one specialist and combine their answers.\n\nAlways base your final answer on the specialists' returned content and preserve any source URLs they provide."
+        }
+      },
+      "id": "mc-02",
+      "name": "Coordinator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [-440, 0]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/google/gemini-2.5-flash-lite",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "mc-03",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-560, 224],
+      "credentials": {
+        "openAiApi": {
+          "id": "XCNfqBJBUQGjrCbU",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Web Research Specialist. Delegates an open-web research task to a sub-agent that searches and scrapes the web with Firecrawl and returns a synthesised, sourced answer. Input: a natural-language research request.",
+        "workflowId": {
+          "__rl": true,
+          "value": "EloBPnI3rG6VwCwG",
+          "mode": "list",
+          "cachedResultName": "Agent: Web Research Specialist (Tool)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'The research request or question to investigate on the open web', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "mc-04",
+      "name": "Web Research Specialist",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [-300, 224]
+    },
+    {
+      "parameters": {
+        "description": "Nette Docs Specialist. Searches the official Nette / Contributte documentation knowledge base (Qdrant) and returns the most relevant passages with source URLs. Input: a natural-language question about Nette.",
+        "workflowId": {
+          "__rl": true,
+          "value": "35Ue6WyoRz6QR4R0",
+          "mode": "list",
+          "cachedResultName": "Nette RAG (Tool)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'The natural-language question about Nette to look up in the documentation', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "mc-05",
+      "name": "Nette Docs Specialist",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [-160, 224]
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [[{ "node": "Coordinator Agent", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Coordinator Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Web Research Specialist": {
+      "ai_tool": [[{ "node": "Coordinator Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "Nette Docs Specialist": {
+      "ai_tool": [[{ "node": "Coordinator Agent", "type": "ai_tool", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

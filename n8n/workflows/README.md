@@ -86,6 +86,20 @@ small set of credentials:
 | 31 | `cand_page_change_monitor` | Daily page-diff → LLM summary → Slack | Schedule 24h | 11 | Firecrawl, LiteLLM, Postgres, Slack |
 | 32 | `cand_reasoning_agent` | Plan-then-act reasoning agent (Langfuse showcase) | Manual | 8 | LiteLLM |
 | 33 | `cand_website_chat_rag_ingest` | Map a whole site → embed N pages → Qdrant | Manual | 10 | Firecrawl, LiteLLM, Qdrant |
+| | **Adopted templates** (net-new capabilities, n8n.io) | | | | |
+| 34 | `rag_with_citations` | RAG chat over `nette_docs` with **deterministic numbered citations** + Sources list | Chat | 7 | Qdrant, LiteLLM |
+| 35 | `pdf_kb_minio_qdrant` | List PDFs in a MinIO bucket → extract text → embed → Qdrant (`pdf_kb`) | Manual | 11 | MinIO, LiteLLM, Qdrant |
+| 36 | `ocr_ingest_vision_qdrant` | Image URL → LiteLLM **vision OCR** → markdown → Qdrant (`ocr_docs`) | Webhook `ocr/ingest` | 7 | LiteLLM (vision), Qdrant |
+| 37 | `agent_research_specialist` | Web-research sub-agent (Firecrawl search+scrape) exposed as an agent tool | Sub-workflow | 5 | Firecrawl, LiteLLM |
+| 38 | `multi_agent_coordinator` | Coordinator that **delegates** to the research specialist + Nette RAG specialists | Chat | 5 | LiteLLM, sub-workflows |
+
+> **Adopted templates** are stack-native re-implementations of popular n8n.io
+> templates, chosen for capabilities the existing set lacked: inline citations,
+> binary-PDF/MinIO ingest, vision OCR (no Mistral-OCR endpoint on this stack —
+> uses an OpenRouter vision model via LiteLLM `openrouter/*` passthrough), and a
+> true multi-agent coordinator. `34` reuses the existing `nette_docs` collection;
+> `35`/`36` auto-create `pdf_kb`/`ocr_docs` on first run. `38` calls `37` and the
+> existing `nette_rag_tool` as `toolWorkflow` tools.
 
 ---
 
