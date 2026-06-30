@@ -2,7 +2,7 @@ name: yai-node-exporter
 
 services:
   node-exporter:
-    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.9.1}
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-v1.11.1}
     container_name: yai-node-exporter
     restart: unless-stopped
     pid: host
