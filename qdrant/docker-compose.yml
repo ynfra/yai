@@ -2,7 +2,7 @@ name: yai-qdrant
 
 services:
   qdrant:
-    image: qdrant/qdrant:${QDRANT_VERSION:-v1.17.0}
+    image: qdrant/qdrant:${QDRANT_VERSION:-v1.18.2}
     container_name: yai-qdrant
     restart: unless-stopped
     ports:
