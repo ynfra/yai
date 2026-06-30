@@ -2,7 +2,7 @@ name: yai-minio
 
 services:
   minio:
-    image: ${MINIO_IMAGE:-pgsty/minio:RELEASE.2026-04-17T00-00-00Z}
+    image: ${MINIO_IMAGE:-pgsty/minio:RELEASE.2026-06-18T00-00-00Z}
     container_name: yai-minio
     restart: unless-stopped
     command: server /data --console-address :9001
