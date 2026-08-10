@@ -1,0 +1,319 @@
+{
+  "name": "Nette Download",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "nd-01",
+      "name": "When Called by Orchestrator",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "nd-02",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://blog.nette.org/cs/feed/rss",
+        "options": {}
+      },
+      "id": "nd-03",
+      "name": "Nette RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;\nreturn $input.all()\n  .filter(item => {\n    const d = item.json.pubDate ? new Date(item.json.pubDate).getTime() : 0;\n    return d >= cutoff;\n  })\n  .sort((a, b) => new Date(b.json.pubDate||0) - new Date(a.json.pubDate||0));"
+      },
+      "id": "nd-04",
+      "name": "Filter & Sort",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "nd-05",
+      "name": "Loop Articles",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        272,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first().json;\nconst link = item.link || '';\nconst guid = crypto.createHash('md5').update('nette:' + link).digest('hex');\nreturn [{ json: { guid, title: item.title||'', link, pubDate: item.pubDate||item.isoDate||null, contentSnippet: item.contentSnippet||item.content||'' } }];"
+      },
+      "id": "nd-06",
+      "name": "Setup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (COUNT(*) = 0) AS is_new FROM rss_articles WHERE guid = '{{ $json.guid }}'",
+        "options": {}
+      },
+      "id": "nd-07",
+      "name": "PG Lookup",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        -96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.is_new }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          }
+        },
+        "options": {}
+      },
+      "id": "nd-08",
+      "name": "New Article?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Setup').item.json.link }}",
+        "options": {}
+      },
+      "id": "nd-09",
+      "name": "Fetch Article",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1168,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.data || '';\nconst patterns = [/<article[\\s\\S]*?>([\\s\\S]*?)<\\/article>/i, /<main[\\s\\S]*?>([\\s\\S]*?)<\\/main>/i];\nlet content = '';\nfor (const re of patterns) {\n  const m = html.match(re);\n  if (m && m[1].trim().length > 100) { content = m[1]; break; }\n}\nif (!content) {\n  const b = html.match(/<body[\\s\\S]*?>([\\s\\S]*?)<\\/body>/i);\n  content = b ? b[1] : html;\n}\ncontent = content\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .substring(0, 10000);\nreturn [{ json: { text: content } }];"
+      },
+      "id": "nd-10",
+      "name": "Extract Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO rss_articles (guid, title, link, published_at, content, state) VALUES ('{{ $('Setup').item.json.guid }}', '{{ $('Setup').item.json.title.replace(/'/g, \"''\") }}', '{{ $('Setup').item.json.link.replace(/'/g, \"''\") }}', {{ $('Setup').item.json.pubDate ? \"'\" + $('Setup').item.json.pubDate + \"'\" : 'NULL' }}, '{{ $json.text.replace(/'/g, \"''\") }}', 'pending') ON CONFLICT (guid) DO NOTHING",
+        "options": {}
+      },
+      "id": "nd-11",
+      "name": "PG Insert",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1616,
+        -32
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "u9hMj8HxBdnjTZik",
+          "name": "yai-postgres-nette"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Called by Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Nette RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Nette RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nette RSS": {
+      "main": [
+        [
+          {
+            "node": "Filter & Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Sort": {
+      "main": [
+        [
+          {
+            "node": "Loop Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Articles": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup": {
+      "main": [
+        [
+          {
+            "node": "PG Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG Lookup": {
+      "main": [
+        [
+          {
+            "node": "New Article?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Article?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Article",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Article": {
+      "main": [
+        [
+          {
+            "node": "Extract Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Content": {
+      "main": [
+        [
+          {
+            "node": "PG Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG Insert": {
+      "main": [
+        [
+          {
+            "node": "Loop Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

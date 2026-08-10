@@ -1,0 +1,313 @@
+{
+  "name": "Nette Docs Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "nette-docs-ingest",
+        "options": {}
+      },
+      "id": "ni-00",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        8
+      ],
+      "webhookId": "nette-docs-ingest"
+    },
+    {
+      "parameters": {},
+      "id": "ni-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n    {json: {url: \"https://doc.nette.org/en/application\"}},\n    {json: {url: \"https://doc.nette.org/en/application/ajax\"}},\n    {json: {url: \"https://doc.nette.org/en/application/bootstrapping\"}},\n    {json: {url: \"https://doc.nette.org/en/application/components\"}},\n    {json: {url: \"https://doc.nette.org/en/application/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/application/creating-links\"}},\n    {json: {url: \"https://doc.nette.org/en/application/directory-structure\"}},\n    {json: {url: \"https://doc.nette.org/en/application/how-it-works\"}},\n    {json: {url: \"https://doc.nette.org/en/application/multiplier\"}},\n    {json: {url: \"https://doc.nette.org/en/application/presenters\"}},\n    {json: {url: \"https://doc.nette.org/en/application/routing\"}},\n    {json: {url: \"https://doc.nette.org/en/application/templates\"}},\n    {json: {url: \"https://doc.nette.org/en/assets\"}},\n    {json: {url: \"https://doc.nette.org/en/assets/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/assets/vite\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/attribute-requires\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/composer\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/creating-editing-form\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/dynamic-snippets\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/editors-and-tools\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/form-reuse\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/inject-method-attribute\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/lets-create-contact-form\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/microsites\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/pagination\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/passing-settings-to-presenters\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/post-links\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/presenter-traits\"}},\n    {json: {url: \"https://doc.nette.org/en/best-practices/restore-request\"}},\n    {json: {url: \"https://doc.nette.org/en/bootstrap\"}},\n    {json: {url: \"https://doc.nette.org/en/caching\"}},\n    {json: {url: \"https://doc.nette.org/en/code-checker\"}},\n    {json: {url: \"https://doc.nette.org/en/component-model\"}},\n    {json: {url: \"https://doc.nette.org/en/contributing\"}},\n    {json: {url: \"https://doc.nette.org/en/contributing/code\"}},\n    {json: {url: \"https://doc.nette.org/en/contributing/coding-standard\"}},\n    {json: {url: \"https://doc.nette.org/en/contributing/documentation\"}},\n    {json: {url: \"https://doc.nette.org/en/contributing/syntax\"}},\n    {json: {url: \"https://doc.nette.org/en/database\"}},\n    {json: {url: \"https://doc.nette.org/en/database/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/database/exceptions\"}},\n    {json: {url: \"https://doc.nette.org/en/database/explorer\"}},\n    {json: {url: \"https://doc.nette.org/en/database/guide\"}},\n    {json: {url: \"https://doc.nette.org/en/database/reflection\"}},\n    {json: {url: \"https://doc.nette.org/en/database/security\"}},\n    {json: {url: \"https://doc.nette.org/en/database/sql-way\"}},\n    {json: {url: \"https://doc.nette.org/en/database/transactions\"}},\n    {json: {url: \"https://doc.nette.org/en/database/type-conversion\"}},\n    {json: {url: \"https://doc.nette.org/en/database/upgrading\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/autowiring\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/container\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/extensions\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/factory\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/faq\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/global-state\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/introduction\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/nette-container\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/passing-dependencies\"}},\n    {json: {url: \"https://doc.nette.org/en/dependency-injection/services\"}},\n    {json: {url: \"https://doc.nette.org/en/forms\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/controls\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/in-presenter\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/rendering\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/standalone\"}},\n    {json: {url: \"https://doc.nette.org/en/forms/validation\"}},\n    {json: {url: \"https://doc.nette.org/en/http\"}},\n    {json: {url: \"https://doc.nette.org/en/http/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/http/request\"}},\n    {json: {url: \"https://doc.nette.org/en/http/response\"}},\n    {json: {url: \"https://doc.nette.org/en/http/sessions\"}},\n    {json: {url: \"https://doc.nette.org/en/http/urls\"}},\n    {json: {url: \"https://doc.nette.org/en/mail\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-2-1\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-2-2\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-2-3\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-2-4\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-3-0\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-3-1\"}},\n    {json: {url: \"https://doc.nette.org/en/migrations/to-3-2\"}},\n    {json: {url: \"https://doc.nette.org/en/neon\"}},\n    {json: {url: \"https://doc.nette.org/en/neon/format\"}},\n    {json: {url: \"https://doc.nette.org/en/\"}},\n    {json: {url: \"https://doc.nette.org/en/configuring\"}},\n    {json: {url: \"https://doc.nette.org/en/glossary\"}},\n    {json: {url: \"https://doc.nette.org/en/installation\"}},\n    {json: {url: \"https://doc.nette.org/en/introduction-to-object-oriented-programming\"}},\n    {json: {url: \"https://doc.nette.org/en/troubleshooting\"}},\n    {json: {url: \"https://doc.nette.org/en/vulnerability-protection\"}},\n    {json: {url: \"https://doc.nette.org/en/php-generator\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/authentication\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/comments\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/creating-posts\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/home-page\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/model\"}},\n    {json: {url: \"https://doc.nette.org/en/quickstart/single-post\"}},\n    {json: {url: \"https://doc.nette.org/en/robot-loader\"}},\n    {json: {url: \"https://doc.nette.org/en/safe-stream\"}},\n    {json: {url: \"https://doc.nette.org/en/schema\"}},\n    {json: {url: \"https://doc.nette.org/en/security\"}},\n    {json: {url: \"https://doc.nette.org/en/security/authentication\"}},\n    {json: {url: \"https://doc.nette.org/en/security/authorization\"}},\n    {json: {url: \"https://doc.nette.org/en/security/configuration\"}},\n    {json: {url: \"https://doc.nette.org/en/security/passwords\"}},\n    {json: {url: \"https://doc.nette.org/en/tokenizer\"}},\n    {json: {url: \"https://doc.nette.org/en/utils\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/arrays\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/callback\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/datetime\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/filesystem\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/finder\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/floats\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/helpers\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/html-elements\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/images\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/iterables\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/json\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/paginator\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/process\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/random\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/reflection\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/smartobject\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/staticclass\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/strings\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/type\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/upgrading\"}},\n    {json: {url: \"https://doc.nette.org/en/utils/validators\"}}\n];"
+      },
+      "id": "ni-02",
+      "name": "URL List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ni-03",
+      "name": "Loop Pages",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -352,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/scrape",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, formats: ['markdown']}) }}",
+        "options": {}
+      },
+      "id": "ni-04",
+      "name": "Firecrawl Scrape",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -128,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst md = (item.data && item.data.markdown) ? item.data.markdown : '';\nconst url = (item.data && item.data.metadata && item.data.metadata.sourceURL) ? item.data.metadata.sourceURL : '';\nconst title = (item.data && item.data.metadata && item.data.metadata.title) ? item.data.metadata.title : url;\nif (!md || md.length < 50) {\n  return [{ json: { skip: true, url, title, chunks: [], texts: [] } }];\n}\nconst sections = md.split(/\\n(?=#{1,3} )/).map(s => s.trim()).filter(s => s.length > 80);\nconst raw = sections.length > 0 ? sections : [md];\nconst chunks = raw.map((text, i) => ({ text: text.substring(0, 2000), chunk_index: i }));\nconst texts = chunks.map(c => c.text);\nreturn [{ json: { skip: false, url, title, chunks, texts } }];"
+      },
+      "id": "ni-05",
+      "name": "Chunk + Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ni-06",
+      "name": "Has Content?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:24000/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model: 'openrouter/nvidia/llama-nemotron-embed-vl-1b-v2:free', input: $json.texts}) }}",
+        "options": {}
+      },
+      "id": "ni-07",
+      "name": "LiteLLM Embed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "7SoM6ZsaObayRno9",
+          "name": "yai-litellm"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst embedResp = $input.first().json;\nconst embedData = embedResp.data || [];\nconst chunkData = $('Chunk + Prepare').item.json;\nconst chunks = chunkData.chunks;\nconst url = chunkData.url;\nconst title = chunkData.title;\nconst crawledAt = new Date().toISOString();\nif (!embedData.length || !chunks.length) {\n  return [{ json: { points: [] } }];\n}\nconst points = embedData.map(emb => {\n  const chunk = chunks[emb.index] || chunks[0];\n  const h = crypto.createHash('md5').update(url + ':' + chunk.chunk_index).digest('hex');\n  const uuid = h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20,32);\n  return {\n    id: uuid,\n    vector: emb.embedding,\n    payload: { text: chunk.text, url, title, chunk_index: chunk.chunk_index, crawled_at: crawledAt }\n  };\n});\nreturn [{ json: { points } }];"
+      },
+      "id": "ni-08",
+      "name": "Build Qdrant Points",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "point",
+        "operation": "upsertPoints",
+        "collectionName": {
+          "__rl": true,
+          "mode": "string",
+          "value": "nette_docs"
+        },
+        "points": "={{ JSON.stringify($json.points) }}",
+        "requestOptions": {}
+      },
+      "id": "ni-09",
+      "name": "Qdrant Upsert",
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        992,
+        -136
+      ],
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "3UHOpFaEKNpKmR7M",
+          "name": "Qdrant account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "URL List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL List": {
+      "main": [
+        [
+          {
+            "node": "Loop Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Pages": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Firecrawl Scrape",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Scrape": {
+      "main": [
+        [
+          {
+            "node": "Chunk + Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk + Prepare": {
+      "main": [
+        [
+          {
+            "node": "Has Content?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Content?": {
+      "main": [
+        [
+          {
+            "node": "LiteLLM Embed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LiteLLM Embed": {
+      "main": [
+        [
+          {
+            "node": "Build Qdrant Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Qdrant Points": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Upsert": {
+      "main": [
+        [
+          {
+            "node": "Loop Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "URL List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

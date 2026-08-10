@@ -1,0 +1,108 @@
+{
+  "name": "[Demo] Firecrawl \u2014 Scrape URL",
+  "nodes": [
+    {
+      "id": "fc1-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fc1-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://doc.nette.org",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fc1-03",
+      "name": "Scrape URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/scrape",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, formats: ['markdown', 'links']}) }}"
+      }
+    },
+    {
+      "id": "fc1-04",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst d = resp.data || {};\nconst md = d.markdown || '';\nconst meta = d.metadata || {};\nreturn [{json: {\n  success: resp.success,\n  title: meta.title,\n  url: meta.sourceURL,\n  status: meta.statusCode,\n  word_count: md.split(/\\s+/).filter(Boolean).length,\n  links_count: (d.links || []).length,\n  markdown_preview: md.slice(0, 800) + (md.length > 800 ? '\\n\u2026' : ''),\n  top_links: (d.links || []).slice(0, 10)\n}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Scrape URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape URL": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

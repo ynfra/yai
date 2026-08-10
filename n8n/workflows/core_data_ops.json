@@ -1,0 +1,234 @@
+{
+  "name": "[Demo] Core \u2014 Data Ops",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "do-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {json: {id: 1, name: \"Alice\",   role: \"SRE\",     tags: [\"k8s\",\"linux\",\"python\"]}},\n  {json: {id: 2, name: \"Bob\",     role: \"DevOps\",  tags: [\"docker\",\"ci\",\"bash\"]}},\n  {json: {id: 3, name: \"Carol\",   role: \"SRE\",     tags: [\"monitoring\",\"linux\"]}},\n  {json: {id: 4, name: \"David\",   role: \"Sec\",     tags: [\"security\",\"python\"]}},\n];"
+      },
+      "id": "do-02",
+      "name": "Team Alpha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ids 3 & 4 overlap with Team Alpha (duplicates)\nreturn [\n  {json: {id: 3, name: \"Carol\",   role: \"SRE\",     tags: [\"grafana\",\"prometheus\"]}},\n  {json: {id: 4, name: \"David\",   role: \"Sec\",     tags: [\"vault\",\"siem\"]}},\n  {json: {id: 5, name: \"Eve\",     role: \"DevOps\",  tags: [\"helm\",\"terraform\"]}},\n  {json: {id: 6, name: \"Frank\",   role: \"DBA\",     tags: [\"postgres\",\"redis\"]}},\n];"
+      },
+      "id": "do-03",
+      "name": "Team Beta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        64
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "do-04",
+      "name": "Merge Datasets",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "id",
+        "options": {}
+      },
+      "id": "do-05",
+      "name": "Remove Duplicate People",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "do-06",
+      "name": "Sort by Name",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tags",
+        "options": {}
+      },
+      "id": "do-07",
+      "name": "Split Out Tags",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "tags",
+        "options": {}
+      },
+      "id": "do-08",
+      "name": "Unique Tags",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "do-09",
+      "name": "Aggregate Tags",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -32
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Team Alpha",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Team Beta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Team Alpha": {
+      "main": [
+        [
+          {
+            "node": "Merge Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Team Beta": {
+      "main": [
+        [
+          {
+            "node": "Merge Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Datasets": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicate People",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicate People": {
+      "main": [
+        [
+          {
+            "node": "Sort by Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by Name": {
+      "main": [
+        [
+          {
+            "node": "Split Out Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Tags": {
+      "main": [
+        [
+          {
+            "node": "Unique Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unique Tags": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

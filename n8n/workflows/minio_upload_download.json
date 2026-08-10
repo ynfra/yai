@@ -1,0 +1,252 @@
+{
+  "name": "[Demo] MinIO \u2014 Upload & Download",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "mn2-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\n\nfunction sigv4(method, path, body) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const payloadHash = crypto.createHash('sha256').update(body||'').digest('hex');\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    payload_hash: payloadHash,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\nconst { amz_date, payload_hash, auth } = sigv4('PUT', '/examples', '');\nreturn [{json: { url: `http://${HOST}/examples`, auth, amz_date, payload_hash }}];"
+      },
+      "id": "mn2-02",
+      "name": "Sign Create Bucket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Sign Create Bucket').item.json.auth }}"
+            },
+            {
+              "name": "x-amz-date",
+              "value": "={{ $('Sign Create Bucket').item.json.amz_date }}"
+            },
+            {
+              "name": "x-amz-content-sha256",
+              "value": "={{ $('Sign Create Bucket').item.json.payload_hash }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mn2-03",
+      "name": "Create Bucket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\n\nfunction sigv4(method, path, body) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const payloadHash = crypto.createHash('sha256').update(body||'').digest('hex');\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    payload_hash: payloadHash,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\nconst content = 'Hello from n8n!\\nUploaded at: ' + new Date().toISOString() + '\\nBucket: examples\\nObject: hello.txt';\nconst { amz_date, payload_hash, auth } = sigv4('PUT', '/examples/hello.txt', content);\nreturn [{json: { url: `http://${HOST}/examples/hello.txt`, auth, amz_date, payload_hash, content }}];"
+      },
+      "id": "mn2-04",
+      "name": "Sign Upload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Sign Upload').item.json.auth }}"
+            },
+            {
+              "name": "x-amz-date",
+              "value": "={{ $('Sign Upload').item.json.amz_date }}"
+            },
+            {
+              "name": "x-amz-content-sha256",
+              "value": "={{ $('Sign Upload').item.json.payload_hash }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "rawText",
+        "options": {}
+      },
+      "id": "mn2-05",
+      "name": "Upload File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\n\nfunction sigv4(method, path, body) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const payloadHash = crypto.createHash('sha256').update(body||'').digest('hex');\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    payload_hash: payloadHash,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\nconst { amz_date, payload_hash, auth } = sigv4('GET', '/examples/hello.txt', '');\nreturn [{json: { url: `http://${HOST}/examples/hello.txt`, auth, amz_date, payload_hash }}];"
+      },
+      "id": "mn2-06",
+      "name": "Sign Download",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Sign Download').item.json.auth }}"
+            },
+            {
+              "name": "x-amz-date",
+              "value": "={{ $('Sign Download').item.json.amz_date }}"
+            },
+            {
+              "name": "x-amz-content-sha256",
+              "value": "={{ $('Sign Download').item.json.payload_hash }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mn2-07",
+      "name": "Download File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\n// Response may be a string or nested under 'data'\nconst content = typeof item.json === 'string'\n  ? item.json\n  : item.json?.data || JSON.stringify(item.json);\nreturn [{json: {\n  success: true,\n  bucket: 'examples',\n  object: 'hello.txt',\n  downloaded_content: content,\n  size_bytes: (content || '').length\n}}];"
+      },
+      "id": "mn2-08",
+      "name": "Show Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sign Create Bucket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Create Bucket": {
+      "main": [
+        [
+          {
+            "node": "Create Bucket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Bucket": {
+      "main": [
+        [
+          {
+            "node": "Sign Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Upload": {
+      "main": [
+        [
+          {
+            "node": "Upload File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload File": {
+      "main": [
+        [
+          {
+            "node": "Sign Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Download": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Show Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

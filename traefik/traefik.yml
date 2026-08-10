@@ -1,0 +1,20 @@
+entryPoints:
+  web:
+    address: ":80"
+
+api:
+  dashboard: true
+  insecure: true
+
+ping: {}
+
+providers:
+  file:
+    directory: /config
+    watch: true
+
+metrics:
+  prometheus: {}
+
+log:
+  level: WARN

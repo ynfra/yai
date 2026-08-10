@@ -1,0 +1,16 @@
+name: yai-vector
+
+services:
+  vector:
+    image: timberio/vector:${VECTOR_VERSION:-0.44.0-debian}
+    container_name: yai-vector
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+    command: ["--config", "/etc/vector/vector.yaml"]
+    networks:
+      - yai-infra
+networks:
+  yai-infra:
+    external: true

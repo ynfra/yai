@@ -1,0 +1,302 @@
+{
+  "name": "[Demo] Browserless \u2192 MinIO \u2014 Screenshot to Storage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "screenshot-to-minio",
+        "options": {}
+      },
+      "id": "bs2-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eu-1",
+              "name": "url",
+              "value": "={{ $json.url ?? $json.body.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bs2-02",
+      "name": "Extract URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\n\nfunction sigv4(method, path, body) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const payloadHash = crypto.createHash('sha256').update(body||'').digest('hex');\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    payload_hash: payloadHash,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\n\nconst { amz_date, payload_hash, auth } = sigv4('PUT', '/screenshots', '');\nreturn [{json: { url: `http://${HOST}/screenshots`, auth, amz_date, payload_hash }}];"
+      },
+      "id": "bs2-03",
+      "name": "Sign Create Bucket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Sign Create Bucket').item.json.auth }}"
+            },
+            {
+              "name": "x-amz-date",
+              "value": "={{ $('Sign Create Bucket').item.json.amz_date }}"
+            },
+            {
+              "name": "x-amz-content-sha256",
+              "value": "={{ $('Sign Create Bucket').item.json.payload_hash }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bs2-04",
+      "name": "Create Bucket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        -96
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:26003/screenshot",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $('Extract URL').item.json.url}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "bs2-05",
+      "name": "Take Screenshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\nconst BUCKET = 'screenshots';\n\nfunction sigv4(method, path, payloadHash) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\n\nconst item = $input.first();\nconst filename = `screenshot_${Date.now()}.png`;\nconst objectPath = `/${BUCKET}/${filename}`;\nconst buf = Buffer.from(item.binary.data.data, 'base64');\nconst payloadHash = crypto.createHash('sha256').update(buf).digest('hex');\nconst { amz_date, auth } = sigv4('PUT', objectPath, payloadHash);\n\nreturn [{\n  json: {\n    minio_url: `http://${HOST}${objectPath}`,\n    filename,\n    bucket: BUCKET,\n    auth,\n    amz_date,\n    payload_hash: payloadHash\n  },\n  binary: item.binary\n}];"
+      },
+      "id": "bs2-06",
+      "name": "Sign Upload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "br-1",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "br-2",
+              "name": "filename",
+              "value": "={{ $('Sign Upload').item.json.filename }}",
+              "type": "string"
+            },
+            {
+              "id": "br-3",
+              "name": "minio_url",
+              "value": "={{ $('Sign Upload').item.json.minio_url }}",
+              "type": "string"
+            },
+            {
+              "id": "br-4",
+              "name": "bucket",
+              "value": "={{ $('Sign Upload').item.json.bucket }}",
+              "type": "string"
+            },
+            {
+              "id": "br-5",
+              "name": "source_url",
+              "value": "={{ $('Extract URL').item.json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bs2-08",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -96
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "ce3ea5fa-1306-4e0c-9158-69ae38f3ada5",
+      "name": "When clicking \u2018Execute workflow\u2019"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "screenshots",
+        "fileName": "test.png",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "b9b80c8d-0b31-45d1-8628-bd8cf7e0426e",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "SUc81Mjj3q7fQnPu",
+          "name": "yai-minio-s3"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URL": {
+      "main": [
+        [
+          {
+            "node": "Sign Create Bucket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Create Bucket": {
+      "main": [
+        [
+          {
+            "node": "Create Bucket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Bucket": {
+      "main": [
+        [
+          {
+            "node": "Take Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take Screenshot": {
+      "main": [
+        [
+          {
+            "node": "Sign Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Upload": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Extract URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

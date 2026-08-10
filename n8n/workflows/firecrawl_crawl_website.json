@@ -1,0 +1,165 @@
+{
+  "name": "[Demo] Firecrawl \u2014 Crawl Website",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc2-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://doc.nette.org",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "limit",
+              "value": 5,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc2-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:21000/v1/crawl",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, limit: $json.limit}) }}",
+        "options": {}
+      },
+      "id": "fc2-03",
+      "name": "Start Crawl",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wait 5 seconds for the crawl job to complete.\n// Increase delay or add retry loop for large sites.\nawait new Promise(r => setTimeout(r, 5000));\nreturn $input.all();"
+      },
+      "id": "fc2-04",
+      "name": "Wait for Crawl",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:21000/v1/crawl/{{$('Start Crawl').item.json.id}}",
+        "options": {}
+      },
+      "id": "fc2-05",
+      "name": "Get Crawl Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst pages = (resp.data || []).map(p => ({\n  url: (p.metadata || {}).sourceURL || p.url,\n  title: (p.metadata || {}).title,\n  words: (p.markdown || '').split(/\\s+/).filter(Boolean).length,\n  markdown: (p.markdown || '').slice(0, 300)\n}));\nreturn [{json: {\n  job_status: resp.status,\n  completed: resp.completed,\n  total: resp.total,\n  pages\n}}];"
+      },
+      "id": "fc2-06",
+      "name": "Extract Pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Start Crawl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Crawl": {
+      "main": [
+        [
+          {
+            "node": "Wait for Crawl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Crawl": {
+      "main": [
+        [
+          {
+            "node": "Get Crawl Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Crawl Status": {
+      "main": [
+        [
+          {
+            "node": "Extract Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

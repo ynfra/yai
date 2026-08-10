@@ -1,0 +1,279 @@
+{
+  "annotations": { "list": [] },
+  "description": "PostgreSQL extensions actually installed per database (from pg_extension), with shared_preload_libraries for comparison. Loaded ≠ CREATEd.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "One row per instance. `pg_stat_statements` and `timescaledb` columns show whether the extension is CREATEd in *every* selected database. `Preload` is `current_setting('shared_preload_libraries')` — what the postmaster preloads at startup. Loaded ≠ CREATEd.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "left",
+            "cellOptions": { "type": "auto", "wrapText": true },
+            "filterable": false,
+            "inspect": false
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "ins" },
+            "properties": [
+              { "id": "displayName", "value": "Instance" },
+              { "id": "custom.width", "value": 160 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #stmt" },
+            "properties": [
+              { "id": "displayName", "value": "pg_stat_statements" },
+              { "id": "custom.width", "value": 170 },
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "0": { "color": "red", "index": 0, "text": "✗ NOT installed" } }, "type": "value" },
+                  { "options": { "1": { "color": "green", "index": 1, "text": "✓ installed" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #ts" },
+            "properties": [
+              { "id": "displayName", "value": "timescaledb" },
+              { "id": "custom.width", "value": 140 },
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "0": { "color": "red", "index": 0, "text": "✗ NOT installed" } }, "type": "value" },
+                  { "options": { "1": { "color": "green", "index": 1, "text": "✓ installed" } }, "type": "value" }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": { "type": "color-text" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #ext" },
+            "properties": [
+              { "id": "displayName", "value": "Extensions" },
+              { "id": "custom.width", "value": 100 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #db" },
+            "properties": [
+              { "id": "displayName", "value": "Databases" },
+              { "id": "custom.width", "value": 100 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "extensions" },
+            "properties": [
+              { "id": "displayName", "value": "shared_preload_libraries" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #meta" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(Time.*|__name__.*|job.*|instance.*|cluster.*|cluster_domain.*|ip.*|hostname.*|kind.*|cls.*|listen_port.*|data_dir.*|conf_path.*|hba_path.*|wal_level.*|encoding.*|version.*|ver_num.*|ver_str.*|cluster_id.*|cluster_name.*|primary_conninfo.*|exporter.*)$"
+            },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          }
+        ]
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "cellHeight": "auto",
+        "footer": { "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "min by (ins) (pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\", datname=~\"$datname\", extname=\"pg_stat_statements\"}) or label_replace(min by (ins) (pg_meta_info{cls=~\"$cluster\", ins=~\"$instance\"}) * 0, \"placeholder\", \"\", \"ins\", \".*\")",
+          "format": "table",
+          "instant": true,
+          "refId": "stmt"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "min by (ins) (pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\", datname=~\"$datname\", extname=\"timescaledb\"}) or label_replace(min by (ins) (pg_meta_info{cls=~\"$cluster\", ins=~\"$instance\"}) * 0, \"placeholder\", \"\", \"ins\", \".*\")",
+          "format": "table",
+          "instant": true,
+          "refId": "ts"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "count by (ins) (count by (ins, extname) (pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\", datname=~\"$datname\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "ext"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "count by (ins) (count by (ins, datname) (pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\", datname=~\"$datname\"}))",
+          "format": "table",
+          "instant": true,
+          "refId": "db"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "pg_meta_info{cls=~\"$cluster\", ins=~\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "meta"
+        }
+      ],
+      "title": "Status",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": { "byField": "ins", "mode": "outer" }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+      "description": "Every (database, extension) pair from pg_extension. If a row is missing for a database, that extension is NOT installed there.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "datname" }, "properties": [{ "id": "displayName", "value": "Database" }, { "id": "custom.width", "value": 200 }] },
+          { "matcher": { "id": "byName", "options": "extname" }, "properties": [{ "id": "displayName", "value": "Extension" }, { "id": "custom.width", "value": 240 }] },
+          { "matcher": { "id": "byName", "options": "extversion" }, "properties": [{ "id": "displayName", "value": "Version" }, { "id": "custom.width", "value": 120 }] },
+          { "matcher": { "id": "byName", "options": "schema" }, "properties": [{ "id": "displayName", "value": "Schema" }, { "id": "custom.width", "value": 160 }] },
+          { "matcher": { "id": "byRegexp", "options": "^(Value|Time|__name__|job|instance|kind|cluster_domain|cluster|ip|hostname|exporter|cls|ins)$" }, "properties": [{ "id": "custom.hidden", "value": true }] }
+        ]
+      },
+      "gridPos": { "h": 16, "w": 24, "x": 0, "y": 5 },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": false, "displayName": "Database" }, { "desc": false, "displayName": "Extension" }]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+          "expr": "pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\", datname=~\"$datname\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Installed extensions per database",
+      "type": "table"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "tags": ["FX", "PGSQL", "Extensions"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "DS (Metrics)",
+        "multi": false,
+        "name": "DS_VMETRICS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_meta_info, cls)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": { "query": "label_values(pg_meta_info, cls)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_meta_info{cls=~\"$cluster\"}, ins)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": { "query": "label_values(pg_meta_info{cls=~\"$cluster\"}, ins)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": { "selected": false, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_VMETRICS}" },
+        "definition": "label_values(pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\"}, datname)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Database",
+        "multi": true,
+        "name": "datname",
+        "options": [],
+        "query": { "query": "label_values(pg_extension_installed{cls=~\"$cluster\", ins=~\"$instance\"}, datname)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "PGSQL Extensions",
+  "uid": "pgsql-extensions",
+  "version": 1,
+  "weekStart": ""
+}

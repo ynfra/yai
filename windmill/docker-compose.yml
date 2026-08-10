@@ -1,0 +1,91 @@
+name: yai-windmill
+
+services:
+  postgres:
+    image: postgres:17.10
+    restart: unless-stopped
+    shm_size: 1g
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - TZ=${TZ:-UTC}
+      - PGTZ=${TZ:-UTC}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  windmill-server:
+    image: ${WM_IMAGE:-ghcr.io/windmill-labs/windmill:1.703.0}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "${WINDMILL_PORT:-28000}:8000"
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}?sslmode=disable
+      - MODE=server
+      - TZ=${TZ:-UTC}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data/logs:/tmp/windmill/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/api/version 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  windmill-worker:
+    image: ${WM_IMAGE:-ghcr.io/windmill-labs/windmill:1.703.0}
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}?sslmode=disable
+      - MODE=worker
+      - WORKER_GROUP=default
+      - TZ=${TZ:-UTC}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data/cache:/tmp/windmill/cache
+      - ./data/logs:/tmp/windmill/logs
+
+  windmill-worker-native:
+    image: ${WM_IMAGE:-ghcr.io/windmill-labs/windmill:1.703.0}
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}?sslmode=disable
+      - MODE=worker
+      - WORKER_GROUP=native
+      - NUM_WORKERS=8
+      - SLEEP_QUEUE=200
+      - TZ=${TZ:-UTC}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data/logs:/tmp/windmill/logs

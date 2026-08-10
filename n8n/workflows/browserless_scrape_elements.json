@@ -1,0 +1,109 @@
+{
+  "name": "[Demo] Browserless \u2014 Scrape Elements",
+  "nodes": [
+    {
+      "id": "bl2-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bl2-02",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://news.ycombinator.com",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bl2-03",
+      "name": "Scrape Elements",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:26003/scrape",
+        "sendBody": true,
+        "contentType": "rawText",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({url: $json.url, elements: [{\"selector\": \"h1\"}, {\"selector\": \"h2\"}, {\"selector\": \"p\"}, {\"selector\": \"a\"}]}) }}"
+      }
+    },
+    {
+      "id": "bl2-04",
+      "name": "Format Elements",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst bySelector = {};\nfor (const group of (resp.data || [])) {\n  bySelector[group.selector] = (group.results || []).map(r => ({\n    text: r.text?.trim().slice(0, 200),\n    href: (r.attributes || []).find(a => a.name === 'href')?.value\n  })).filter(r => r.text);\n}\nreturn [{json: {\n  url: $('Config').item.json.url,\n  headings_h1: bySelector['h1'] || [],\n  headings_h2: (bySelector['h2'] || []).slice(0, 10),\n  paragraphs: (bySelector['p'] || []).slice(0, 5),\n  links: (bySelector['a'] || []).filter(a => a.href).slice(0, 20)\n}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Scrape Elements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Elements": {
+      "main": [
+        [
+          {
+            "node": "Format Elements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

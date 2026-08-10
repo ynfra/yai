@@ -1,0 +1,111 @@
+{
+  "name": "[Demo] MinIO \u2014 List Buckets",
+  "nodes": [
+    {
+      "id": "mn1-01",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "mn1-02",
+      "name": "Sign List Buckets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\nconst crypto = require('crypto');\nconst ACCESS_KEY = 'admin';\nconst SECRET_KEY = 'Admin1234!';\nconst HOST = 'host.docker.internal:25000';\nconst REGION = 'us-east-1';\n\nfunction sigv4(method, path, body) {\n  const now = new Date();\n  const p = n => String(n).padStart(2, '0');\n  const amzDate = `${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}T${p(now.getUTCHours())}${p(now.getUTCMinutes())}${p(now.getUTCSeconds())}Z`;\n  const dateStamp = amzDate.slice(0,8);\n  const payloadHash = crypto.createHash('sha256').update(body||'').digest('hex');\n  const canonHeaders = `host:${HOST}\\nx-amz-content-sha256:${payloadHash}\\nx-amz-date:${amzDate}\\n`;\n  const signedHdrs = 'host;x-amz-content-sha256;x-amz-date';\n  const canonReq = [method, path, '', canonHeaders, signedHdrs, payloadHash].join('\\n');\n  const credScope = `${dateStamp}/${REGION}/s3/aws4_request`;\n  const strToSign = `AWS4-HMAC-SHA256\\n${amzDate}\\n${credScope}\\n${crypto.createHash('sha256').update(canonReq).digest('hex')}`;\n  const hmac = (k,d) => crypto.createHmac('sha256',k).update(d).digest();\n  const kDate = hmac(Buffer.from('AWS4'+SECRET_KEY), dateStamp);\n  const kReg  = hmac(kDate,  REGION);\n  const kSvc  = hmac(kReg,   's3');\n  const kSign = hmac(kSvc,   'aws4_request');\n  const sig   = crypto.createHmac('sha256', kSign).update(strToSign).digest('hex');\n  return {\n    amz_date: amzDate,\n    payload_hash: payloadHash,\n    auth: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${sig}`\n  };\n}\nconst { amz_date, payload_hash, auth } = sigv4('GET', '/', '');\nreturn [{json: { url: `http://${HOST}/`, auth, amz_date, payload_hash }}];"
+      }
+    },
+    {
+      "id": "mn1-03",
+      "name": "List Buckets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Sign List Buckets').item.json.auth }}"
+            },
+            {
+              "name": "x-amz-date",
+              "value": "={{ $('Sign List Buckets').item.json.amz_date }}"
+            },
+            {
+              "name": "x-amz-content-sha256",
+              "value": "={{ $('Sign List Buckets').item.json.payload_hash }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "mn1-04",
+      "name": "Parse XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const xml = $input.first().json.data || $input.first().json;\nconst xmlStr = typeof xml === 'string' ? xml : JSON.stringify(xml);\n// Extract bucket names from XML using regex (no external XML parser needed)\nconst names = [...xmlStr.matchAll(/<Name>([^<]+)<\\/Name>/g)].map(m => m[1]);\nconst dates  = [...xmlStr.matchAll(/<CreationDate>([^<]+)<\\/CreationDate>/g)].map(m => m[1]);\nconst buckets = names.map((n, i) => ({ name: n, created: dates[i] || '' }));\nreturn [{json: {\n  bucket_count: buckets.length,\n  buckets,\n  tip: 'No buckets yet? Run the [Demo] MinIO \u2014 Upload & Download workflow first.'\n}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sign List Buckets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign List Buckets": {
+      "main": [
+        [
+          {
+            "node": "List Buckets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Buckets": {
+      "main": [
+        [
+          {
+            "node": "Parse XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

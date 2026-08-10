@@ -1,0 +1,42 @@
+name: yai-traefik
+
+services:
+  traefik:
+    image: traefik:${TRAEFIK_VERSION:-v3.3}
+    container_name: yai-traefik
+    restart: unless-stopped
+    labels:
+      - "dev.orbstack.domains=yai.orb.local,yai.localhost,localhost"
+    ports:
+      - "${TRAEFIK_PORT:-80}:80"
+      - "${TRAEFIK_API_PORT:-27001}:8080"
+    volumes:
+      - ./traefik.yml:/traefik.yml:ro
+      - ./config:/config:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - default
+      - yai-infra
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping 2>/dev/null | grep -q OK || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  dashboard:
+    image: nginx:1.27-alpine
+    container_name: yai-dashboard
+    restart: unless-stopped
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ 2>/dev/null | grep -q yai || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  yai-infra:
+    external: true

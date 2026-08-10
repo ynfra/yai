@@ -1,0 +1,59 @@
+# vmagent scrape config.
+#
+# vmagent runs inside the yai-grafana compose project but scrapes /metrics
+# endpoints exposed by *sibling* yai compose projects via the host gateway.
+# Each target uses the host-published port (e.g. litellm = 24000), reached
+# through host.docker.internal which is wired in docker-compose.yml.
+#
+# To add a new service:
+#   1. Make sure it exposes a Prometheus-format /metrics endpoint.
+#   2. Add a job below pointing at host.docker.internal:<host_port>.
+#   3. `yai restart grafana` (or just the vmagent service) to reload the config.
+
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  # --- This stack ------------------------------------------------------------
+  - job_name: 'vmagent'
+    static_configs:
+      - targets: ['vmagent:8429']
+
+  - job_name: 'victoria-metrics'
+    static_configs:
+      - targets: ['victoriametrics:8428']
+
+  - job_name: 'victoria-logs'
+    static_configs:
+      - targets: ['victorialogs:9428']
+
+  # --- Sibling yai services (scraped via host gateway) -----------------------
+  - job_name: 'qdrant'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:26000']
+
+  - job_name: 'litellm'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:24000']
+
+  - job_name: 'langfuse-web'
+    metrics_path: /api/public/metrics
+    static_configs:
+      - targets: ['host.docker.internal:23000']
+
+  - job_name: 'n8n'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:26002']
+
+  - job_name: 'windmill'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:28000']
+
+  - job_name: 'minio'
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ['host.docker.internal:25000']

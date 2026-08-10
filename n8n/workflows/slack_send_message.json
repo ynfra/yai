@@ -1,0 +1,51 @@
+{
+  "name": "Slack: Send Message",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "41425785-d2c0-4b5f-bf29-b71a53860370",
+      "name": "When clicking \u2018Execute workflow\u2019"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "98f333b6-921e-4963-8741-e3df7093e9da",
+      "name": "Send a message",
+      "webhookId": "ab4dc106-088a-4c60-9fac-eeb95286309d",
+      "credentials": {
+        "slackApi": {
+          "id": "MszaAJ5MUYqhurpo",
+          "name": "yai-slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
