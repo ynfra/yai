@@ -1,43 +1,33 @@
-# Ynfra | yAI
+# ynfra / yai
 
-A self-hosted docker-based AI infrastructure stack.
-With LLM gateway, observability, vector DB, object storage, workflow engines, browser fleet, and a metrics/logs/traces backend.
-
----
+Self-hosted, docker-based AI infrastructure stack — LLM gateway, observability,
+vector DB, object storage, workflow engines, browser fleet, and a
+metrics/logs/traces backend. Each service is an isolated docker-compose project
+managed by a single CLI (`./yai.sh`); the host has no GPU — all inference is
+remote, brokered by LiteLLM.
 
 ![](docs/dashboard.png)
-
-<p align=center>
-Website 🚀 <a href="https://f3l1x.io">f3l1x.io</a> | Contact 👨🏻‍💻 <a href="https://f3l1x.io">f3l1x.io</a> | Twitter 🐦 <a href="https://twitter.com/xf3l1x">@xf3l1x</a>
-</p>
-
----
 
 ## Prerequisites
 
 - [Docker Engine](https://docs.docker.com/engine/) ≥ 24 with [Compose v2](https://docs.docker.com/compose/).
-- [OrbStack](https://orbstack.dev) (recommended for local development on macOS)
+- [OrbStack](https://orbstack.dev) (recommended for local development on macOS).
 
-## Quick start
+## Usage
 
 ```bash
-# 1. Create data directories and check for placeholder secrets
+# Create data directories and check for placeholder secrets
 ./yai.sh init all
-
-# 2. Bring up the stack
+# Edit each <service>/.env — replace every change_me value (openssl rand -hex 32)
+# Bring up the stack, then check container status
 ./yai.sh stack start
+./yai.sh ps all
 ```
 
-## CLI
-
-```
-./yai.sh stack <cmd>              operate on every service
-./yai.sh service <name> <cmd>     operate on one service
-./yai.sh <cmd> [service|all]      short form
-
-Commands: init | start | stop | restart | logs | ps | status | orbstack:install
-```
-
+CLI forms: `./yai.sh stack <cmd>` (every service), `./yai.sh service <name>
+<cmd>` (one service), or the short `./yai.sh <cmd> [service|all]`.
+Commands: `init | start | stop | restart | logs | ps | status | doctor |
+orbstack install`.
 
 ## Services
 
@@ -59,44 +49,15 @@ Commands: init | start | stop | restart | logs | ps | status | orbstack:install
 | browserless | <http://browserless.yai.orb.local> | 26003 | no auth |
 | Traefik API | <http://yai.orb.local:27001> | 27001 | no auth |
 
+Traefik routes `*.yai.orb.local` to every service and serves a navigation
+dashboard at <http://yai.orb.local> with one-click links to every service.
 
-> Traefik routes `*.yai.orb.local` to every service and serves a navigation dashboard at **<http://yai.orb.local>** with one-click links to every service.
+## Notes
 
-## Development
+- LiteLLM needs the shared Postgres: start `postgres` first, create its DB (`docker exec -it yai-postgres psql -U yai -d yai -c 'CREATE DATABASE litellm;'`), and point `DATABASE_URL` in `litellm/.env` at it.
+- Windmill is not in the `yai.sh` SERVICES array — manage it with `docker compose` directly from `windmill/`.
+- macOS development runs inside an OrbStack VM: `orb create debian:trixie yai`, then inside the machine (`orb -m yai`) run `./yai.sh orbstack install` and `./yai.sh doctor`.
+- Each service folder supports a gitignored `.env.local` that overrides `.env` — ideal for personal/dev tweaks.
 
-> Use OrbStack to run the stack (very recommended for local development on macOS).
-
-1. Clone this repository.
-
-```bash
-cd ~/code
-git clone https://github.com/ynfra/yai.git
-cd yai
-```
-
-2. Create OrbStack machine.
-
-```bash
-orb create debian:trixie yai
-```
-
-3. Setup dependencies in the machine (inside the machine).
-
-> Enter the machine with `orb -m yai`.
-
-```bash
-./yai.sh orbstack install
-```
-
-4. Validate the development stack (inside the machine).
-
-```bash
-./yai.sh doctor
-```
-
-5. Use the development stack.
-
-```bash
-./yai.sh init all
-./yai.sh stack start
-```
+See [AGENTS.md](AGENTS.md) for the architecture, image versions, port
+allocation, observability wiring, and agent rules.
