@@ -15,7 +15,8 @@ User input (optional — filter to one service): $ARGUMENTS
 ### 1. Extract pinned versions
 
 ```sh
-grep -h "image:" yai/*/docker-compose.yml \
+# From the yai directory:
+grep -h "image:" ./*/docker-compose.yml \
   | grep -v "^\s*#" | sort -u
 ```
 
